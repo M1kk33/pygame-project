@@ -1,6 +1,7 @@
 import os
 import sys
 import pygame
+from math import sin, cos, pi, radians, degrees
 
 
 pygame.init()
@@ -84,7 +85,7 @@ tile_images = {
     'empty': load_image('grass.png')
 }
 
-player_image = load_image('mar.png')
+player_image = load_image('tank.png')
 
 tile_width = tile_height = 50
 
@@ -144,41 +145,32 @@ class Player(pygame.sprite.Sprite):
         super().__init__(player_group, all_sprites)
         self.original_image = player_image
         self.image = player_image.copy()
-        self.rect = self.image.get_rect().move(tile_width * pos_x + 15, tile_height * pos_y + 5)
-        self.angle = 0
+        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+        self.angle = radians(0)
+        self.speed = 100
+        self.real_x = self.rect.x  # инициализация real_x
+        self.real_y = self.rect.y  # инициализация real_y
         
-    def move(self, x, y, key):
-        tile_above_player = check_tile(player, level, key)
-        if tile_above_player is not None and tile_above_player != '#':
-            self.rect.x += x
-            self.rect.y += y
+    def move(self, delta_time, key):
+        # tile_above_player = check_tile(player, level, key)
+        # if tile_above_player is not None and tile_above_player != '#':
+            # dx = cos(radians(self.angle)) * speed
+            # dy = sin(radians(self.angle)) * speed
+            # self.rect.x += dx
+            # self.rect.y += dy
+        path = self.speed * delta_time
+        self.real_x += path * cos(self.angle)
+        self.real_y -= path * sin(self.angle)
+        self.rect.x = round(self.real_x)
+        self.rect.y = round(self.real_y)
 
     def rotate(self, angle):
-        self.angle += angle
-        self.image = pygame.transform.rotate(self.original_image, self.angle)  # поворачиваем исходное изображение
+        self.angle += radians(angle)
+        self.image = pygame.transform.rotate(self.original_image, degrees(self.angle))  # поворачиваем исходное изображение
         self.rect = self.image.get_rect(center=self.rect.center)  # устанавливаем центр изображения как точку поворота
 
 
-class Camera:
-    # зададим начальный сдвиг камеры
-    def __init__(self):
-        self.dx = 0
-        self.dy = 0
-        
-    # сдвинуть объект obj на смещение камеры
-    def apply(self, obj):
-        obj.rect.x += self.dx
-        obj.rect.y += self.dy
-    
-    # позиционировать камеру на объекте target
-    def update(self, target):
-        self.dx = -(target.rect.x + target.rect.w // 2 - WIDTH // 2)
-        self.dy = -(target.rect.y + target.rect.h // 2 - HEIGHT // 2)
-        
-
-camera = Camera()
-
-level = load_level('map2.txt')
+level = load_level('field.txt')
 
 player, level_x, level_y = generate_level(level)
 
@@ -191,6 +183,9 @@ start_screen()
 
 turn_plus = False
 turn_minus = False
+moving = False
+
+clock = pygame.time.Clock()
 
 while running:
     for event in pygame.event.get():
@@ -198,34 +193,32 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_w:
-                player.move(0, -50, pygame.K_w)
+                moving = True
+                player.speed = 100
             if event.key == pygame.K_s:
-                player.move(0, 50, pygame.K_s)
+                moving = True
+                player.speed = -100
             if event.key == pygame.K_a:
-                player.move(-50, 0, pygame.K_a)
-            if event.key == pygame.K_d:
-                player.move(50, 0, pygame.K_d)
-            if event.key == pygame.K_q:
                 turn_plus = True
-            if event.key == pygame.K_e:
+            if event.key == pygame.K_d:
                 turn_minus = True
         if event.type == pygame.KEYUP:
-            if event.key == pygame.K_q:
+            if event.key == pygame.K_a:
                 turn_plus = False
-            if event.key == pygame.K_e:
+            if event.key == pygame.K_d:
                 turn_minus = False
+            if event.key == pygame.K_w:
+                moving = False
+            if event.key == pygame.K_s:
+                moving = False
 
     if turn_plus:
         player.rotate(1)
     if turn_minus:
-        player.rotate(-1)
+        player.rotate(-1) 
+    if moving:
+        player.move(clock.get_time() / 1000, pygame.K_w)
 
-    # изменяем ракурс камеры
-    # camera.update(player)
-
-    # обновляем положение всех спрайтов
-    for sprite in all_sprites:
-        camera.apply(sprite)
 
     all_sprites.update()
 

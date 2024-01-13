@@ -145,24 +145,21 @@ class Player(pygame.sprite.Sprite):
         super().__init__(player_group, all_sprites)
         self.original_image = player_image
         self.image = player_image.copy()
+        print(self.image.get_rect())
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.angle = radians(0)
         self.speed = 100
-        self.real_x = self.rect.x  # инициализация real_x
-        self.real_y = self.rect.y  # инициализация real_y
+        self.real_x = self.rect.centerx  # инициализация real_x
+        self.real_y = self.rect.centery  # инициализация real_y
         
     def move(self, delta_time, key):
         # tile_above_player = check_tile(player, level, key)
         # if tile_above_player is not None and tile_above_player != '#':
-            # dx = cos(radians(self.angle)) * speed
-            # dy = sin(radians(self.angle)) * speed
-            # self.rect.x += dx
-            # self.rect.y += dy
-        path = self.speed * delta_time
-        self.real_x += path * cos(self.angle)
-        self.real_y -= path * sin(self.angle)
-        self.rect.x = round(self.real_x)
-        self.rect.y = round(self.real_y)
+            path = self.speed * delta_time
+            self.real_x += path * cos(self.angle)
+            self.real_y -= path * sin(self.angle)
+            self.rect.centerx = round(self.real_x)
+            self.rect.centery = round(self.real_y)
 
     def rotate(self, angle):
         self.angle += radians(angle)
@@ -170,7 +167,8 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=self.rect.center)  # устанавливаем центр изображения как точку поворота
 
 
-level = load_level('field.txt')
+
+level = load_level('map2.txt')
 
 player, level_x, level_y = generate_level(level)
 
@@ -218,7 +216,7 @@ while running:
         player.rotate(-1) 
     if moving:
         player.move(clock.get_time() / 1000, pygame.K_w)
-
+    
 
     all_sprites.update()
 

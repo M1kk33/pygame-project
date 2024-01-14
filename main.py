@@ -287,7 +287,7 @@ def generate_level(level):
     return new_player, x, y
 
 
-def check_tile(player, key, real_x, real_y):
+def check_tile(player):
     if pygame.sprite.spritecollide(player, box_group, False, pygame.sprite.collide_mask):
         return False
     return True
@@ -322,7 +322,7 @@ class Player(pygame.sprite.Sprite):
         self.image = player_image.copy()
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.angle = radians(0)
-        self.speed = 200
+        self.speed = 1
 
         self.real_x = self.rect.centerx
         self.real_y = self.rect.centery
@@ -332,23 +332,23 @@ class Player(pygame.sprite.Sprite):
 
         self.mask = pygame.mask.from_surface(self.image)
 
-    def move(self, delta_time, key):
-        path = self.speed * delta_time
-        self.new_real_x += path * cos(self.angle)
-        self.new_real_y -= path * sin(self.angle)
-        self.rect.centerx = round(self.new_real_x)
-        self.rect.centery = round(self.new_real_y)
+    def update(self):
+        if moving:
+            self.new_real_x += self.speed * cos(self.angle)
+            self.new_real_y -= self.speed * sin(self.angle)
+            self.rect.centerx = round(self.new_real_x)
+            self.rect.centery = round(self.new_real_y)
 
-        if check_tile(self, key, self.real_x, self.real_y) is False:
-            self.rect.centerx = round(self.real_x)
-            self.rect.centery = round(self.real_y)
-            self.new_real_x = self.real_x
-            self.new_real_y = self.real_y
-            self.stuck = True
-        else:
-            self.real_x = self.new_real_x
-            self.real_y = self.new_real_y
-            self.stuck = False
+            if check_tile(self) is False:
+                self.rect.centerx = round(self.real_x)
+                self.rect.centery = round(self.real_y)
+                self.new_real_x = self.real_x
+                self.new_real_y = self.real_y
+                self.stuck = True
+            else:
+                self.real_x = self.new_real_x
+                self.real_y = self.new_real_y
+                self.stuck = False
 
     def rotate(self, angle):
         if not self.stuck:
@@ -412,8 +412,8 @@ while running:
         player.rotate(1)
     if turn_minus:
         player.rotate(-1) 
-    if moving:
-        player.move(delta_time, pygame.K_w)
+    # if moving:
+    #     player.move(delta_time)
 
     all_sprites.update()
 

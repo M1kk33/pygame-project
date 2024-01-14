@@ -3,7 +3,6 @@ import sys
 import pygame
 from math import sin, cos, pi, radians, degrees
 
-
 pygame.init()
 size = WIDTH, HEIGHT = 800, 800
 screen = pygame.display.set_mode(size)
@@ -15,6 +14,7 @@ second_fire_key = 'Ctrl'  # 2. Первое мое предложение - за
 # 1. 2. PS Ростислав
 firs_up_down_left_right_key = ['W', 'S', 'A', 'D']
 second_up_down_left_right_key = ['Up', 'Down', 'Left', 'Right']  # Стрелочки
+
 FPS = 60
 
 
@@ -45,10 +45,6 @@ clock = pygame.time.Clock()
 
 def start_screen():
     screen.fill((100, 100, 100))
-    """intro_text = ["ЗАСТАВКА", "",
-                  "Правила игры",
-                  "Если в правилах несколько строк,",
-                  "приходится выводить их построчно"]"""
     intro_text = ["Начать игру",
                   "Правила игры",
                   "Настройки",
@@ -89,7 +85,90 @@ def start_screen():
                         pygame.mouse.get_pos()[1] <= coords[1][1] + 50:
                     rule_screen()
                     return
+                if coords[2][0] <= pygame.mouse.get_pos()[0] <= coords[2][0] + 300 and coords[2][1] <= \
+                        pygame.mouse.get_pos()[1] <= coords[2][1] + 50:
+                    set_screen()
+                    return
+
         pygame.display.flip()
+        clock.tick(FPS)
+
+
+def set_screen():
+    set_text = ["Настройки",
+                "Громкость",
+                "<", ">",
+                "Первый танк клавиши",
+                "Второй танк клавиши"]
+    count = 0
+
+    while True:
+        x, y = [75, -90]  # y = -90 т.к. в дальнейшем при отрисовке первого текста y = y + 100
+        coord = [0, 0]
+
+        screen.fill((100, 100, 100))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if coord[0] <= pygame.mouse.get_pos()[0] <= coord[0] + 90 and coord[1] <= \
+                        pygame.mouse.get_pos()[1] <= coord[1] + 50:
+                    start_screen()
+                    return
+                if buttx1 <= pygame.mouse.get_pos()[0] <= buttx1 + font.size('<')[0] and butty1 <= \
+                        pygame.mouse.get_pos()[1] <= butty1 + font.size('<')[
+                    1] and count > 0:  # максимальная громкость - 10
+                    count -= 1
+                if buttx2 <= pygame.mouse.get_pos()[0] <= buttx2 + font.size('>')[0] and butty2 <= \
+                        pygame.mouse.get_pos()[1] <= butty2 + font.size('>')[1] and count < 10:
+                    count += 1
+        string_rendered = font.render('Назад', 1, pygame.Color('white'))
+        butt_rect = string_rendered.get_rect()
+        pygame.draw.rect(screen, (80, 80, 80), (coord[0], coord[1], 90, 50))
+        pygame.draw.rect(screen, (50, 50, 50), (coord[0], coord[1], 90, 50), 3)
+
+        butt_rect.top = 50 / 2 - font.size('Назад')[1] / 2
+        butt_rect.x = 90 / 2 - font.size('Назад')[0] / 2
+        screen.blit(string_rendered, butt_rect)
+        for line in set_text:
+            string_rendered = font.render(line, 1, pygame.Color('white'))
+            rule_rect = string_rendered.get_rect()
+            if line != '<' and line != '>' and line != 'Первый танк клавиши':
+                rule_rect.x = WIDTH / 2 - font.size(line)[0] / 2
+                y += 100
+
+            elif line == '<':
+                y += 50
+                rule_rect.x = WIDTH / 2 - font.size('Громкость')[0] / 2
+                buttx1 = rule_rect.x
+                butty1 = y
+                pygame.draw.rect(screen, (80, 80, 80),
+                                 (buttx1 - 5, butty1 - 5, font.size('<')[0] + 10, font.size('<')[1] + 10))
+                pygame.draw.rect(screen, (50, 50, 50),
+                                 (buttx1 - 5, butty1 - 5, font.size('<')[0] + 10, font.size('<')[1] + 10), 3)
+
+            elif line == '>':
+                rule_rect.x = WIDTH / 2 + font.size('Громкость')[0] / 2 - font.size('>')[0]
+                butty2 = butty1
+                buttx2 = rule_rect.x
+                pygame.draw.rect(screen, (80, 80, 80),
+                                 (buttx2 - 5, butty2 - 5, font.size('<')[0] + 10, font.size('<')[1] + 10))
+                pygame.draw.rect(screen, (50, 50, 50),
+                                 (buttx2 - 5, butty2 - 5, font.size('<')[0] + 10, font.size('<')[1] + 10), 3)
+            elif line == 'Первый танк клавиши':
+                y += 50
+                rule_rect.x = WIDTH / 2 - font.size(line)[0] / 2
+            rule_rect.top = y
+
+            screen.blit(string_rendered, rule_rect)
+        string_rendered = font.render(str(count), 1, pygame.Color('white'))
+        butt_rect = string_rendered.get_rect()
+        butt_rect.x = 400 - font.size(str(count))[0] / 2
+        butt_rect.top = butty2
+        screen.blit(string_rendered, butt_rect)
+        pygame.display.flip()
+
         clock.tick(FPS)
 
 
@@ -105,16 +184,18 @@ def rule_screen():
                  f"Стрельба производится по нажатии кнопки {second_fire_key}, после чего происходит",
                  "перезарядка длительностью в 4 секунды"]
 
-    start_x, start_y = [75, 75]
     x, y = [75, 10]
     coord = [0, 0]
+
     string_rendered = font.render('Назад', 1, pygame.Color('white'))
     butt_rect = string_rendered.get_rect()
-    pygame.draw.rect(screen, (80, 80, 80), (coord[0], coord[1], 75, 50))
-    pygame.draw.rect(screen, (50, 50, 50), (coord[0], coord[1], 75, 50), 3)
-    butt_rect.top = 25 - font.size('Назад')[1] / 2
-    butt_rect.x = 75 / 2 - font.size('Назад')[0] / 2
+    pygame.draw.rect(screen, (80, 80, 80), (coord[0], coord[1], 90, 50))
+    pygame.draw.rect(screen, (50, 50, 50), (coord[0], coord[1], 90, 50), 3)
+
+    butt_rect.top = 50 / 2 - font.size('Назад')[1] / 2
+    butt_rect.x = 90 / 2 - font.size('Назад')[0] / 2
     screen.blit(string_rendered, butt_rect)
+
     for line in rule_text:
         string_rendered = font.render(line, 1, pygame.Color('white'))
         rule_rect = string_rendered.get_rect()
@@ -124,18 +205,21 @@ def rule_screen():
             rule_rect.x = 10
         else:
             rule_rect.x = 25
+
         rule_rect.top = y
         screen.blit(string_rendered, rule_rect)
         y += 50
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if coord[0] <= pygame.mouse.get_pos()[0] <= coord[0] + 75 and coord[1] <= \
+                if coord[0] <= pygame.mouse.get_pos()[0] <= coord[0] + 90 and coord[1] <= \
                         pygame.mouse.get_pos()[1] <= coord[1] + 50:
                     start_screen()
                     return
+
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -149,7 +233,7 @@ def load_level(filename):
     # и подсчитываем максимальную длину
     max_width = max(map(len, level_map))
 
-    # дополняем каждую строку пустыми клетками ('.')
+    # дополняем каждую строку пустыми клетками ('.')    
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
@@ -175,6 +259,7 @@ player = None
 
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
+wall_group = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 
@@ -186,32 +271,20 @@ def generate_level(level):
             if level[y][x] == '.':
                 Tile('empty', x, y)
             elif level[y][x] == '#':
-                Tile('wall', x, y)
+                wall = Tile('wall', x, y)
+                wall_group.add(wall)
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 new_player = Player(x, y)
-    # вернем игрока, а также размер поля в клетках
+    # вернем игрока, а также размер поля в клетках            
     return new_player, x, y
 
 
-def check_tile(player, level, key):
-    if key == pygame.K_w:
-        tile_x = player.rect.x // tile_width
-        tile_y = (player.rect.y - tile_height) // tile_height
-    elif key == pygame.K_s:
-        tile_x = player.rect.x // tile_width
-        tile_y = (player.rect.y + tile_height) // tile_height
-    elif key == pygame.K_a:
-        tile_x = (player.rect.x - tile_width) // tile_width
-        tile_y = player.rect.y // tile_height
-    elif key == pygame.K_d:
-        tile_x = (player.rect.x + tile_width) // tile_width
-        tile_y = player.rect.y // tile_height
-
-    if 0 <= tile_x < len(level[0]) and 0 <= tile_y < len(level):
-        return level[tile_y][tile_x]
-
-    return None
+def check_tile(player, key, real_x, real_y):
+    if pygame.sprite.spritecollide(player, wall_group, False, pygame.sprite.collide_mask):
+        print('ok')
+        return False
+    return True
 
 
 class Player(pygame.sprite.Sprite):
@@ -219,29 +292,44 @@ class Player(pygame.sprite.Sprite):
         super().__init__(player_group, all_sprites)
         self.original_image = player_image
         self.image = player_image.copy()
-        print(self.image.get_rect())
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.angle = radians(0)
         self.speed = 100
-        self.real_x = self.rect.centerx  # инициализация real_x
-        self.real_y = self.rect.centery  # инициализация real_y
+
+        self.real_x = self.rect.centerx
+        self.real_y = self.rect.centery
+        self.new_real_x = self.real_x
+        self.new_real_y = self.real_y
+        self.stuck = False
+
+        self.mask = pygame.mask.from_surface(self.image)
 
     def move(self, delta_time, key):
-        # tile_above_player = check_tile(player, level, key)
-        # if tile_above_player is not None and tile_above_player != '#':
         path = self.speed * delta_time
-        if (tile_width // 2) < (self.real_x + path * cos(self.angle)) < WIDTH - (tile_width // 2) and (
-                tile_height // 2) < (self.real_y - path * sin(self.angle)) < HEIGHT - (tile_height // 2):
-            self.real_x += path * cos(self.angle)
-            self.real_y -= path * sin(self.angle)
+        self.new_real_x += path * cos(self.angle)
+        self.new_real_y -= path * sin(self.angle)
+        self.rect.centerx = round(self.new_real_x)
+        self.rect.centery = round(self.new_real_y)
+
+        if check_tile(self, key, self.real_x, self.real_y) is False:
             self.rect.centerx = round(self.real_x)
             self.rect.centery = round(self.real_y)
+            self.new_real_x = self.real_x
+            self.new_real_y = self.real_y
+            self.stuck = True
+        else:
+            self.real_x = self.new_real_x
+            self.real_y = self.new_real_y
+            self.stuck = False
 
     def rotate(self, angle):
-        self.angle += radians(angle)
-        self.image = pygame.transform.rotate(self.original_image,
-                                             degrees(self.angle))  # поворачиваем исходное изображение
-        self.rect = self.image.get_rect(center=self.rect.center)  # устанавливаем центр изображения как точку поворота
+        if not self.stuck:
+            self.angle += radians(angle)
+            self.image = pygame.transform.rotate(self.original_image,
+                                                 degrees(self.angle))  # поворачиваем исходное изображение
+            self.rect = self.image.get_rect(
+                center=self.rect.center)  # устанавливаем центр изображения как точку поворота
+            self.mask = pygame.mask.from_surface(self.image)
 
 
 level = load_level('map2.txt')

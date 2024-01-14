@@ -162,6 +162,7 @@ tile_images = {
 }
 
 player_image = load_image('tank.png')
+shell_image = load_image('shell2.png')
 
 tile_width = tile_height = 50
 
@@ -181,6 +182,7 @@ all_sprites = pygame.sprite.Group()
 wall_group = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
+shells_group = pygame.sprite.Group()
 
 def generate_level(level):
     new_player, x, y = None, None, None
@@ -200,9 +202,26 @@ def generate_level(level):
 
 def check_tile(player, key, real_x, real_y):
     if pygame.sprite.spritecollide(player, wall_group, False, pygame.sprite.collide_mask):
-        print('ok')
         return False
     return True
+
+
+class TankShell(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y, angle):
+        super().__init__(shells_group, all_sprites)
+        self.original_image = shell_image
+        self.image = shell_image.copy()
+        self.rect = self.image.get_rect().move(pos_x, pos_y)
+        self.angle = angle
+        self.speed = 4.6
+
+        self.image = pygame.transform.rotate(self.original_image, degrees(self.angle - pi / 2))
+        self.rect = self.image.get_rect(center=self.rect.center)  # устанавливаем центр изображения как точку поворота
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def update(self):
+        self.rect.centerx += round(self.speed * cos(self.angle))
+        self.rect.centery -= round(self.speed * sin(self.angle))
 
 
 class Player(pygame.sprite.Sprite):
@@ -212,16 +231,16 @@ class Player(pygame.sprite.Sprite):
         self.image = player_image.copy()
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.angle = radians(0)
-        self.speed = 100
+        self.speed = 200
 
         self.real_x = self.rect.centerx
         self.real_y = self.rect.centery
-        self.new_real_x = self.real_x 
-        self.new_real_y = self.real_y  
+        self.new_real_x = self.real_x
+        self.new_real_y = self.real_y
         self.stuck = False
 
         self.mask = pygame.mask.from_surface(self.image)
-        
+
     def move(self, delta_time, key):
         path = self.speed * delta_time
         self.new_real_x += path * cos(self.angle)
@@ -262,24 +281,32 @@ start_screen()
 turn_plus = False
 turn_minus = False
 moving = False
+shell_flying = False
 
 clock = pygame.time.Clock()
+FPS = 300
 
 while running:
+    delta_time = clock.tick(FPS) / 1000
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_w:
+                if player.speed < 0:
+                    player.speed *= -1 
                 moving = True
-                player.speed = 100
             if event.key == pygame.K_s:
                 moving = True
-                player.speed = -100
+                if player.speed > 0:
+                    player.speed *= -1 
             if event.key == pygame.K_a:
                 turn_plus = True
             if event.key == pygame.K_d:
                 turn_minus = True
+            if event.key == pygame.K_e:
+                shell = TankShell(player.rect.centerx, player.rect.centery, player.angle)
+                shell_flying = True
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
                 turn_plus = False
@@ -295,12 +322,13 @@ while running:
     if turn_minus:
         player.rotate(-1) 
     if moving:
-        player.move(clock.get_time() / 1000, pygame.K_w)
+        player.move(delta_time, pygame.K_w)
 
     all_sprites.update()
 
     screen.fill(pygame.Color('black'))
     tiles_group.draw(screen)
+    shells_group.draw(screen)
     player_group.draw(screen)
 
     pygame.display.flip()

@@ -239,7 +239,8 @@ def load_level(filename):
 
 tile_images = {
     'wall': load_image('box.png'),
-    'empty': load_image('grass.png')
+    'empty': load_image('grass.png'),
+    'destroyedgrass': load_image('destroyedgrass.png')
 }
 
 player_image = load_image('tank.png')
@@ -252,15 +253,20 @@ class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
         self.image = tile_images[tile_type]
-        self.rect = self.image.get_rect().move(
-            tile_width * pos_x, tile_height * pos_y)
+        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+        self.type = tile_type
 
+    def destroy(self):
+        if self.type == 'wall':
+            self.image = tile_images['destroyedgrass']
+            self.type = 'destroyedgrass'
+            box_group.remove(self)
 
 player = None
 
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
-wall_group = pygame.sprite.Group()
+box_group = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 shells_group = pygame.sprite.Group()
@@ -273,7 +279,7 @@ def generate_level(level):
                 Tile('empty', x, y)
             elif level[y][x] == '#':
                 wall = Tile('wall', x, y)
-                wall_group.add(wall)
+                box_group.add(wall)
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 new_player = Player(x, y)
@@ -282,7 +288,7 @@ def generate_level(level):
 
 
 def check_tile(player, key, real_x, real_y):
-    if pygame.sprite.spritecollide(player, wall_group, False, pygame.sprite.collide_mask):
+    if pygame.sprite.spritecollide(player, box_group, False, pygame.sprite.collide_mask):
         return False
     return True
 
@@ -301,6 +307,10 @@ class TankShell(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
+        # if pygame.sprite.spritecollide(self, box_group, True, pygame.sprite.collide_mask):
+        for tile in pygame.sprite.spritecollide(self, box_group, False, pygame.sprite.collide_mask):
+            tile.destroy()
+            self.kill()
         self.rect.centerx += round(self.speed * cos(self.angle))
         self.rect.centery -= round(self.speed * sin(self.angle))
 

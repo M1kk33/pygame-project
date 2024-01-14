@@ -323,6 +323,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.angle = radians(0)
         self.speed = 1
+        self.rotating_angle = 1
 
         self.real_x = self.rect.centerx
         self.real_y = self.rect.centery
@@ -350,6 +351,9 @@ class Player(pygame.sprite.Sprite):
                 self.real_y = self.new_real_y
                 self.stuck = False
 
+        if rotating:
+            self.rotate(self.rotating_angle)
+
     def rotate(self, angle):
         if not self.stuck:
             self.angle += radians(angle)
@@ -369,8 +373,7 @@ running = True
 
 start_screen()
 
-turn_plus = False
-turn_minus = False
+rotating = False
 moving = False
 shell_flying = False
 
@@ -392,28 +395,30 @@ while running:
                 if player.speed > 0:
                     player.speed *= -1 
             if event.key == pygame.K_a:
-                turn_plus = True
+                if player.rotating_angle < 0:
+                    player.rotating_angle *= -1
+                rotating = True
             if event.key == pygame.K_d:
-                turn_minus = True
+                if player.rotating_angle > 0:
+                    player.rotating_angle *= -1
+                rotating = True
             if event.key == pygame.K_e:
                 shell = TankShell(player.rect.centerx, player.rect.centery, player.angle)
                 shell_flying = True
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
-                turn_plus = False
+                rotating = False
             if event.key == pygame.K_d:
-                turn_minus = False
+                rotating = False
             if event.key == pygame.K_w:
                 moving = False
             if event.key == pygame.K_s:
                 moving = False
 
-    if turn_plus:
-        player.rotate(1)
-    if turn_minus:
-        player.rotate(-1) 
-    # if moving:
-    #     player.move(delta_time)
+    # if turn_plus:
+    #     player.rotate(1)
+    # if turn_minus:
+    #     player.rotate(-1) 
 
     all_sprites.update()
 

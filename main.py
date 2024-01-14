@@ -102,6 +102,7 @@ player = None
 
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
+wall_group = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 
@@ -112,7 +113,8 @@ def generate_level(level):
             if level[y][x] == '.':
                 Tile('empty', x, y)
             elif level[y][x] == '#':
-                Tile('wall', x, y)
+                wall = Tile('wall', x, y)
+                wall_group.add(wall)
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 new_player = Player(x, y)
@@ -120,24 +122,11 @@ def generate_level(level):
     return new_player, x, y
 
 
-def check_tile(player, level, key):
-    if key == pygame.K_w:
-        tile_x = player.rect.x // tile_width
-        tile_y = (player.rect.y - tile_height) // tile_height
-    elif key == pygame.K_s:
-        tile_x = player.rect.x // tile_width
-        tile_y = (player.rect.y + tile_height) // tile_height
-    elif key == pygame.K_a:
-        tile_x = (player.rect.x - tile_width) // tile_width
-        tile_y = player.rect.y // tile_height
-    elif key == pygame.K_d:
-        tile_x = (player.rect.x + tile_width) // tile_width
-        tile_y = player.rect.y // tile_height
-
-    if 0 <= tile_x < len(level[0]) and 0 <= tile_y < len(level):
-        return level[tile_y][tile_x]
-
-    return None 
+def check_tile(player, key, real_x, real_y):
+    if pygame.sprite.spritecollide(player, wall_group, False, pygame.sprite.collide_mask):
+        print('ok')
+        return False
+    return True
 
 
 class Player(pygame.sprite.Sprite):
@@ -145,27 +134,42 @@ class Player(pygame.sprite.Sprite):
         super().__init__(player_group, all_sprites)
         self.original_image = player_image
         self.image = player_image.copy()
-        print(self.image.get_rect())
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.angle = radians(0)
         self.speed = 100
-        self.real_x = self.rect.centerx  # инициализация real_x
-        self.real_y = self.rect.centery  # инициализация real_y
+
+        self.real_x = self.rect.centerx
+        self.real_y = self.rect.centery
+        self.new_real_x = self.real_x 
+        self.new_real_y = self.real_y  
+        self.stuck = False
+
+        self.mask = pygame.mask.from_surface(self.image)
         
     def move(self, delta_time, key):
-        # tile_above_player = check_tile(player, level, key)
-        # if tile_above_player is not None and tile_above_player != '#':
-            path = self.speed * delta_time
-            self.real_x += path * cos(self.angle)
-            self.real_y -= path * sin(self.angle)
+        path = self.speed * delta_time
+        self.new_real_x += path * cos(self.angle)
+        self.new_real_y -= path * sin(self.angle)
+        self.rect.centerx = round(self.new_real_x)
+        self.rect.centery = round(self.new_real_y)
+
+        if check_tile(self, key, self.real_x, self.real_y) is False:
             self.rect.centerx = round(self.real_x)
             self.rect.centery = round(self.real_y)
+            self.new_real_x = self.real_x
+            self.new_real_y = self.real_y
+            self.stuck = True
+        else:
+            self.real_x = self.new_real_x
+            self.real_y = self.new_real_y
+            self.stuck = False
 
     def rotate(self, angle):
-        self.angle += radians(angle)
-        self.image = pygame.transform.rotate(self.original_image, degrees(self.angle))  # поворачиваем исходное изображение
-        self.rect = self.image.get_rect(center=self.rect.center)  # устанавливаем центр изображения как точку поворота
-
+        if not self.stuck:
+            self.angle += radians(angle)
+            self.image = pygame.transform.rotate(self.original_image, degrees(self.angle))  # поворачиваем исходное изображение
+            self.rect = self.image.get_rect(center=self.rect.center)  # устанавливаем центр изображения как точку поворота
+            self.mask = pygame.mask.from_surface(self.image)
 
 
 level = load_level('map2.txt')

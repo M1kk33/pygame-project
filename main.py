@@ -13,7 +13,7 @@ first_fire_key = 'E'  # 1. для примера. Эта переменная д
 
 second_fire_key = 'Ctrl'  # 2. Первое мое предложение - забиндить выстрел для человека на втором танке, который будет управлять стрелочками, на клавишу Ctrl
 # 1. 2. PS Ростислав
-firs_up_down_left_right_key = ['W', 'S', 'A', 'D']
+first_up_down_left_right_key = ['W', 'S', 'A', 'D']
 second_up_down_left_right_key = ['Up', 'Down', 'Left', 'Right']  # Стрелочки
 
 FPS = 60
@@ -90,6 +90,52 @@ def start_screen():
                         pygame.mouse.get_pos()[1] <= coords[2][1] + 50:
                     set_screen()
                     return
+                if coords[3][0] <= pygame.mouse.get_pos()[0] <= coords[3][0] + 300 and coords[3][1] <= \
+                        pygame.mouse.get_pos()[1] <= coords[3][1] + 50:
+                    info_screen()
+                    return
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def info_screen():
+    screen.fill((100, 100, 100))
+
+    info_text = ["Комманда работяг",
+                 "Михаил Пивоваров 10-Б",
+                 "Войцев Ростислав 10-Б",
+                 "Никита Терехов 10-Б"]
+    x, y = [75, 225 - font.size("К")[1] * 2 - 50]
+    coord = [0, 0]
+
+    string_rendered = font.render('Назад', 1, pygame.Color('white'))
+    butt_rect = string_rendered.get_rect()
+    pygame.draw.rect(screen, (80, 80, 80), (coord[0], coord[1], 90, 50))
+    pygame.draw.rect(screen, (50, 50, 50), (coord[0], coord[1], 90, 50), 3)
+
+    butt_rect.top = 50 / 2 - font.size('Назад')[1] / 2
+    butt_rect.x = 90 / 2 - font.size('Назад')[0] / 2
+    screen.blit(string_rendered, butt_rect)
+
+    for line in info_text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        rule_rect = string_rendered.get_rect()
+        rule_rect.x = WIDTH / 2 - font.size(line)[0] / 2
+
+        rule_rect.top = y
+        screen.blit(string_rendered, rule_rect)
+        y += 50
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if coord[0] <= pygame.mouse.get_pos()[0] <= coord[0] + 90 and coord[1] <= \
+                        pygame.mouse.get_pos()[1] <= coord[1] + 50:
+                    start_screen()
+                    return
+
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -138,6 +184,7 @@ def set_screen():
                 rule_rect.x = WIDTH / 2 - font.size(line)[0] / 2
                 y += 100
 
+
             elif line == '<':
                 y += 50
                 rule_rect.x = WIDTH / 2 - font.size('Громкость')[0] / 2
@@ -159,6 +206,40 @@ def set_screen():
             elif line == 'Первый танк клавиши':
                 y += 50
                 rule_rect.x = WIDTH / 2 - font.size(line)[0] / 2
+                rule_rect.top = y
+
+                x_butt_chg1 = 400 - (((len(first_up_down_left_right_key) + len(first_fire_key)) / 2) * 25)
+
+                for butt in first_up_down_left_right_key:
+                    butt_rendered11 = font.render(butt, 1, pygame.Color('white'))
+                    butt_rect11 = string_rendered.get_rect()
+                    butt_rect11.x = x_butt_chg1
+                    butt_rect11.top = y + 100
+                    # print(butt, butt_rect11.x, butt_rect11.top)
+
+                    pygame.draw.rect(screen, (80, 80, 80),
+                                     (x_butt_chg1 - 5, y + 100 - 5, 19 + 10, 20 + 10))
+                    pygame.draw.rect(screen, (50, 50, 50),
+                                     (x_butt_chg1 - 5, y + 100 - 5, 19 + 10, 20 + 10),
+                                     3)  # 19 - величина будто бы самой широкой буквы, т.к.
+                                        # судя по рендеру размеры у букв разные
+                                        #   20 - просто высота той же буквы но у всех букв она вроде одинаковая
+                    x_butt_chg1 += 25 + 19
+                    screen.blit(butt_rendered11, butt_rect11)
+
+                butt_rendered12 = font.render(first_fire_key, 1, pygame.Color('white'))
+                butt_rect12 = string_rendered.get_rect()
+                butt_rect12.x = x_butt_chg1
+                butt_rect12.top = y + 100
+                pygame.draw.rect(screen, (80, 80, 80),
+                                 (x_butt_chg1 - 5, y + 100 - 5, 19 + 10,
+                                  20 + 10))
+                pygame.draw.rect(screen, (50, 50, 50),
+                                 (x_butt_chg1 - 5, y + 100 - 5, 19 + 10,
+                                  20 + 10), 3)
+                y += 50
+                screen.blit(butt_rendered12, butt_rect12)
+
             rule_rect.top = y
 
             screen.blit(string_rendered, rule_rect)
@@ -176,7 +257,7 @@ def rule_screen():
     screen.fill((100, 100, 100))
     rule_text = ["Правила игры",
                  "Первый танк",
-                 f"Перемещается при зажатии клавиш {', '.join(firs_up_down_left_right_key)}.",
+                 f"Перемещается при зажатии клавиш {', '.join(first_up_down_left_right_key)}.",
                  f"Стрельба производится по нажатии кнопки {first_fire_key}, после чего происходит",
                  "перезарядка длительностью в 4 секунды",
                  "Второй танк",
@@ -262,6 +343,7 @@ class Tile(pygame.sprite.Sprite):
             self.type = 'destroyedgrass'
             box_group.remove(self)
 
+
 player = None
 
 # группы спрайтов
@@ -270,6 +352,7 @@ box_group = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 shells_group = pygame.sprite.Group()
+
 
 def generate_level(level):
     new_player, x, y = None, None, None
@@ -307,7 +390,6 @@ class TankShell(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
-        # if pygame.sprite.spritecollide(self, box_group, True, pygame.sprite.collide_mask):
         for tile in pygame.sprite.spritecollide(self, box_group, False, pygame.sprite.collide_mask):
             tile.destroy()
             self.kill()
@@ -406,19 +488,21 @@ while running:
                 shell = TankShell(player.rect.centerx, player.rect.centery, player.angle)
                 shell_flying = True
         if event.type == pygame.KEYUP:
+            keys = pygame.key.get_pressed()
             if event.key == pygame.K_a:
-                rotating = False
+                if not keys[pygame.K_d]:
+                    rotating = False
+                elif player.rotating_angle > 0:
+                    player.rotating_angle *= -1
             if event.key == pygame.K_d:
-                rotating = False
+                if not keys[pygame.K_a]:
+                    rotating = False
+                elif player.rotating_angle < 0:
+                    player.rotating_angle *= -1
             if event.key == pygame.K_w:
                 moving = False
             if event.key == pygame.K_s:
                 moving = False
-
-    # if turn_plus:
-    #     player.rotate(1)
-    # if turn_minus:
-    #     player.rotate(-1) 
 
     all_sprites.update()
 

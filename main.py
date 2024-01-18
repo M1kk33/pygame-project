@@ -6,6 +6,7 @@ from math import sin, cos, pi, radians, degrees
 
 
 pygame.init()
+count = 10
 size = WIDTH, HEIGHT = 800, 800
 screen = pygame.display.set_mode(size)
 fullnameusic = os.path.join('music', 'mizuna-steps5-by-inium_effectoid.ogg.mp3')
@@ -170,12 +171,12 @@ def info_screen():
 
 
 def set_screen(pause=False):
+    global count
     set_text = ["Настройки",
                 "Громкость",
                 "<", ">",
                 "Первый танк клавиши",
                 "Второй танк клавиши"]
-    count = 10
 
     while True:
         x, y = [75, -60]  # y = -90 т.к. в дальнейшем при отрисовке первого текста y = y + 100
@@ -498,7 +499,7 @@ def generate_level(level):
 
 def check_tile(player):
     if pygame.sprite.spritecollide(player, box_group, False, pygame.sprite.collide_mask) or \
-       pygame.sprite.spritecollide(player, wall_group, False, pygame.sprite.collide_mask):
+            pygame.sprite.spritecollide(player, wall_group, False, pygame.sprite.collide_mask):
         return False
     return True
 
@@ -533,7 +534,7 @@ class Player(pygame.sprite.Sprite):
         self.stuck = False
         self.rotating = False
         self.moving = False
-    
+
         if player == 1:
             self.original_image = first_player_image
             self.image = first_player_image.copy()
@@ -669,6 +670,14 @@ while running:
     delta_time = clock.tick(FPS) / 1000
 
     for event in pygame.event.get():
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if 0 <= pygame.mouse.get_pos()[0] <= coordbutt[0] and 0 <= pygame.mouse.get_pos()[1] <= coordbutt[1]:
+                pygame.draw.rect(screen, (20, 20, 20), (3, 3, 44, 44), 5)
+                pygame.display.flip()
+                time.sleep(0.25)
+                pause_window()
+
+                break
         if event.type == pygame.QUIT:
             running = False
 
@@ -678,12 +687,12 @@ while running:
 
             if event.key == pygame.K_w:
                 if first_player.speed < 0:
-                    first_player.speed *= -1 
+                    first_player.speed *= -1
                 first_player.moving = True
             if event.key == pygame.K_s:
                 first_player.moving = True
                 if first_player.speed > 0:
-                    first_player.speed *= -1 
+                    first_player.speed *= -1
             if event.key == pygame.K_a:
                 if first_player.rotating_angle < 0:
                     first_player.rotating_angle *= -1
@@ -701,12 +710,12 @@ while running:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     if second_player.speed < 0:
-                        second_player.speed *= -1 
+                        second_player.speed *= -1
                     second_player.moving = True
                 if event.key == pygame.K_DOWN:
                     second_player.moving = True
                     if second_player.speed > 0:
-                        second_player.speed *= -1 
+                        second_player.speed *= -1
                 if event.key == pygame.K_LEFT:
                     if second_player.rotating_angle < 0:
                         second_player.rotating_angle *= -1

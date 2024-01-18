@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import pygame
 from math import sin, cos, pi, radians, degrees
 
@@ -20,6 +21,7 @@ first_up_down_left_right_fire_key = ['W', 'S', 'A', 'D', 'E']
 second_up_down_left_right_fire_key = ['Up', 'Down', 'Left', 'Right', 'Ctrl']  # Стрелочки
 
 FPS = 60
+running = True
 
 
 def load_image(name, colorkey=None):
@@ -54,47 +56,65 @@ def start_screen():
                   "Настройки",
                   "Информация"]
 
-    # fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
-    # screen.blit(fon, (0, 0))
-    x = (WIDTH // 2) - 150
-    y = 50
-    coords = [[x, i] for i in range(50, 450, 100)]
-    buttsize = buttwidth, buttheight = [300, 50]
-    for line in intro_text:
-        """string_rendered = font.render(line, 1, pygame.Color('white'))
-        intro_rect = string_rendered.get_rect()
-        text_coord += 10
-        intro_rect.top = text_coord
-        intro_rect.x = 400 - len(line) / 2 * 10
-        text_coord += intro_rect.height
-        screen.blit(string_rendered, intro_rect)"""
-        pygame.draw.rect(screen, (80, 80, 80), (x, y, buttwidth, buttheight))
-        pygame.draw.rect(screen, (50, 50, 50), (x, y, buttwidth, buttheight), 3)
-        string_rendered = font.render(line, 1, pygame.Color('white'))
-        intro_rect = string_rendered.get_rect()
-        intro_rect.top = y + buttheight / 2 - font.size(line)[1] / 2
-        intro_rect.x = x + buttwidth / 2 - font.size(line)[0] / 2
-        screen.blit(string_rendered, intro_rect)
-        y += 100
-
     while True:
+        screen.fill((100, 100, 100))
+        x = (WIDTH // 2) - 150
+        y = 50
+        coords = [[x, i] for i in range(50, 450, 100)]
+        buttsize = buttwidth, buttheight = [300, 50]
+        for line in intro_text:
+            """string_rendered = font.render(line, 1, pygame.Color('white'))
+            intro_rect = string_rendered.get_rect()
+            text_coord += 10
+            intro_rect.top = text_coord
+            intro_rect.x = 400 - len(line) / 2 * 10
+            text_coord += intro_rect.height
+            screen.blit(string_rendered, intro_rect)"""
+            pygame.draw.rect(screen, (80, 80, 80), (x, y, buttwidth, buttheight))
+            pygame.draw.rect(screen, (50, 50, 50), (x, y, buttwidth, buttheight), 3)
+            string_rendered = font.render(line, 1, pygame.Color('white'))
+            intro_rect = string_rendered.get_rect()
+            intro_rect.top = y + buttheight / 2 - font.size(line)[1] / 2
+            intro_rect.x = x + buttwidth / 2 - font.size(line)[0] / 2
+            screen.blit(string_rendered, intro_rect)
+            y += 100
+        for coordsind in coords:
+            if coordsind[0] <= pygame.mouse.get_pos()[0] <= coordsind[0] + 300 and coordsind[1] <= \
+                    pygame.mouse.get_pos()[1] <= coordsind[1] + 50:
+                pygame.draw.rect(screen, (120, 120, 120), (coordsind[0], coordsind[1], buttwidth, buttheight), 3)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 if coords[0][0] <= pygame.mouse.get_pos()[0] <= coords[0][0] + 300 and coords[0][1] <= \
                         pygame.mouse.get_pos()[1] <= coords[0][1] + 50:
+                    pygame.draw.rect(screen, (20, 20, 20),
+                                     (coords[0][0] + 3, coords[0][1] + 3, buttwidth - 6, buttheight - 6), 5)
+                    pygame.display.flip()
+                    time.sleep(0.15)
                     return
                 if coords[1][0] <= pygame.mouse.get_pos()[0] <= coords[1][0] + 300 and coords[1][1] <= \
                         pygame.mouse.get_pos()[1] <= coords[1][1] + 50:
+                    pygame.draw.rect(screen, (20, 20, 20),
+                                     (coords[1][0] + 3, coords[1][1] + 3, buttwidth - 6, buttheight - 6), 5)
+                    pygame.display.flip()
+                    time.sleep(0.15)
                     rule_screen()
                     return
                 if coords[2][0] <= pygame.mouse.get_pos()[0] <= coords[2][0] + 300 and coords[2][1] <= \
                         pygame.mouse.get_pos()[1] <= coords[2][1] + 50:
+                    pygame.draw.rect(screen, (20, 20, 20),
+                                     (coords[2][0] + 3, coords[2][1] + 3, buttwidth - 6, buttheight - 6), 5)
+                    pygame.display.flip()
+                    time.sleep(0.15)
                     set_screen()
                     return
                 if coords[3][0] <= pygame.mouse.get_pos()[0] <= coords[3][0] + 300 and coords[3][1] <= \
                         pygame.mouse.get_pos()[1] <= coords[3][1] + 50:
+                    pygame.draw.rect(screen, (20, 20, 20),
+                                     (coords[3][0] + 3, coords[3][1] + 3, buttwidth - 6, buttheight - 6), 5)
+                    pygame.display.flip()
+                    time.sleep(0.15)
                     info_screen()
                     return
         pygame.display.flip()
@@ -108,34 +128,40 @@ def info_screen():
                  "Михаил Пивоваров 10-Б",
                  "Войцев Ростислав 10-Б",
                  "Никита Терехов 10-Б"]
-    x, y = [75, 225 - font.size("К")[1] * 2 - 50]
-    coord = [0, 0]
-
-    string_rendered = font.render('Назад', 1, pygame.Color('white'))
-    butt_rect = string_rendered.get_rect()
-    pygame.draw.rect(screen, (80, 80, 80), (coord[0], coord[1], 90, 50))
-    pygame.draw.rect(screen, (50, 50, 50), (coord[0], coord[1], 90, 50), 3)
-
-    butt_rect.top = 50 / 2 - font.size('Назад')[1] / 2
-    butt_rect.x = 90 / 2 - font.size('Назад')[0] / 2
-    screen.blit(string_rendered, butt_rect)
-
-    for line in info_text:
-        string_rendered = font.render(line, 1, pygame.Color('white'))
-        rule_rect = string_rendered.get_rect()
-        rule_rect.x = WIDTH / 2 - font.size(line)[0] / 2
-
-        rule_rect.top = y
-        screen.blit(string_rendered, rule_rect)
-        y += 50
-
     while True:
+        screen.fill((100, 100, 100))
+        x, y = [75, 225 - font.size("К")[1] * 2 - 50]
+        coord = [0, 0]
+
+        string_rendered = font.render('Назад', 1, pygame.Color('white'))
+        butt_rect = string_rendered.get_rect()
+        pygame.draw.rect(screen, (80, 80, 80), (coord[0], coord[1], 90, 50))
+        pygame.draw.rect(screen, (50, 50, 50), (coord[0], coord[1], 90, 50), 3)
+
+        butt_rect.top = 50 / 2 - font.size('Назад')[1] / 2
+        butt_rect.x = 90 / 2 - font.size('Назад')[0] / 2
+        screen.blit(string_rendered, butt_rect)
+
+        for line in info_text:
+            string_rendered = font.render(line, 1, pygame.Color('white'))
+            rule_rect = string_rendered.get_rect()
+            rule_rect.x = WIDTH / 2 - font.size(line)[0] / 2
+
+            rule_rect.top = y
+            screen.blit(string_rendered, rule_rect)
+            y += 50
+        if coord[0] <= pygame.mouse.get_pos()[0] <= coord[0] + 90 and coord[1] <= \
+                pygame.mouse.get_pos()[1] <= coord[1] + 50:
+            pygame.draw.rect(screen, (120, 120, 120), (coord[0], coord[1], 90, 50), 3)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if coord[0] <= pygame.mouse.get_pos()[0] <= coord[0] + 90 and coord[1] <= \
                         pygame.mouse.get_pos()[1] <= coord[1] + 50:
+                    pygame.draw.rect(screen, (20, 20, 20), (coord[0] + 3, coord[1] + 3, 90 - 6, 50 - 6), 5)
+                    pygame.display.flip()
+                    time.sleep(0.15)
                     start_screen()
                     return
 
@@ -143,7 +169,7 @@ def info_screen():
         clock.tick(FPS)
 
 
-def set_screen():
+def set_screen(pause=False):
     set_text = ["Настройки",
                 "Громкость",
                 "<", ">",
@@ -166,6 +192,7 @@ def set_screen():
         butt_rect.top = 50 / 2 - font.size('Назад')[1] / 2
         butt_rect.x = 90 / 2 - font.size('Назад')[0] / 2
         screen.blit(string_rendered, butt_rect)
+
         for line in set_text:
             string_rendered = font.render(line, 1, pygame.Color('white'))
             rule_rect = string_rendered.get_rect()
@@ -236,43 +263,83 @@ def set_screen():
                     x_butt_chg1 += 25 + 55
                     screen.blit(butt_rendered11, butt_rect11)
 
-
                 y += 70
-
 
             rule_rect.top = y
 
             screen.blit(string_rendered, rule_rect)
+        coordall = [coord] + change_butt_coords1 + change_butt_coords2 + [[buttx1, butty1]] + [[buttx2, butty2]]
+        for coordind in coordall:
+            if coordind == coord:
+                if coordind[0] <= pygame.mouse.get_pos()[0] <= 90 and coordind[1] <= \
+                        pygame.mouse.get_pos()[1] <= 50:
+                    pygame.draw.rect(screen, (120, 120, 120),
+                                     (coordind[0], coordind[1], 90, 50), 3)
+            elif coordind in change_butt_coords1 or coordind in change_butt_coords2:
+                if coordind[0] - 5 <= pygame.mouse.get_pos()[0] <= coordind[0] + 60 and coordind[1] - 5 <= \
+                        pygame.mouse.get_pos()[1] <= coordind[1] + 35:
+                    pygame.draw.rect(screen, (120, 120, 120),
+                                     (coordind[0] - 5, coordind[1] - 5, 65, 30), 3)
+            elif coordind == [buttx1, butty1] or coordind == [buttx2, butty2]:
+                if coordind[0] - 5 <= pygame.mouse.get_pos()[0] <= coordind[0] + 5 + font.size('<')[0] and coordind[
+                    1] - 5 <= \
+                        pygame.mouse.get_pos()[1] <= coordind[1] + 5 + font.size('<')[1]:
+                    pygame.draw.rect(screen, (120, 120, 120),
+                                     (coordind[0] - 5, coordind[1] - 5, font.size('<')[0] + 10, font.size('<')[1] + 10),
+                                     3)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if coord[0] <= pygame.mouse.get_pos()[0] <= coord[0] + 90 and coord[1] <= \
-                        pygame.mouse.get_pos()[1] <= coord[1] + 50:
+                        pygame.mouse.get_pos()[1] <= coord[1] + 50 and not pause:
+                    pygame.draw.rect(screen, (20, 20, 20),
+                                     (coord[0] + 3, coord[1] + 3, coord[0] + 84,
+                                      coord[1] + 44),
+                                     5)
+                    pygame.display.flip()
+                    time.sleep(0.25)
                     start_screen()
                     return
-                if buttx1 <= pygame.mouse.get_pos()[0] <= buttx1 + font.size('<')[0] and butty1 <= \
-                        pygame.mouse.get_pos()[1] <= butty1 + font.size('<')[
+                if coord[0] <= pygame.mouse.get_pos()[0] <= coord[0] + 90 and coord[1] <= \
+                        pygame.mouse.get_pos()[1] <= coord[1] + 50 and pause:
+                    pygame.draw.rect(screen, (20, 20, 20),
+                                     (coord[0] + 3, coord[1] + 3, coord[0] + 84,
+                                      coord[1] + 44),
+                                     5)
+                    pygame.display.flip()
+                    time.sleep(0.25)
+                    pause_window()
+
+                    return
+                if buttx1 - 5 <= pygame.mouse.get_pos()[0] <= buttx1 + 5 + font.size('<')[0] and butty1 - 5 <= \
+                        pygame.mouse.get_pos()[1] <= butty1 + 5 + font.size('<')[
                     1] and count > 0:  # максимальная громкость - 10
                     count -= 1
                     pygame.mixer.music.set_volume(count / 10)
-                if buttx2 <= pygame.mouse.get_pos()[0] <= buttx2 + font.size('>')[0] and butty2 <= \
-                        pygame.mouse.get_pos()[1] <= butty2 + font.size('>')[1] and count < 10:
+                if buttx2 - 5 <= pygame.mouse.get_pos()[0] <= buttx2 + 5 + font.size('>')[0] and butty2 - 5 <= \
+                        pygame.mouse.get_pos()[1] <= butty2 + 5 + font.size('>')[1] and count < 10:
                     count += 1
                     pygame.mixer.music.set_volume(count / 10)
                 for i in change_butt_coords1:
                     button = change_butt_coords1.index(i)
-                    if i[0] <= pygame.mouse.get_pos()[0] <= i[0] + 65 and i[1] <= pygame.mouse.get_pos()[1] <= i[1] + 30:
+                    if i[0] - 5 <= pygame.mouse.get_pos()[0] <= i[0] + 60 and i[1] - 5 <= pygame.mouse.get_pos()[1] <= \
+                            i[
+                                1] + 35:
+
                         while not clicked:
                             for event1 in pygame.event.get():
                                 if event1.type == pygame.KEYDOWN and pygame.key.name(event1.key).upper() \
                                         not in second_up_down_left_right_fire_key + first_up_down_left_right_fire_key:
                                     key = pygame.key.name(event1.key).capitalize()
                                     first_up_down_left_right_fire_key[button] = key
+
                                     clicked = True
                 for i in change_butt_coords2:
                     button = change_butt_coords2.index(i)
-                    if i[0] <= pygame.mouse.get_pos()[0] <= i[0] + 65 and i[1] <= pygame.mouse.get_pos()[1] <= i[1] + 30:
+                    if i[0] - 5 <= pygame.mouse.get_pos()[0] <= i[0] + 60 and i[1] - 5 <= pygame.mouse.get_pos()[1] <= \
+                            i[
+                                1] + 35:
                         while not clicked:
                             for event2 in pygame.event.get():
                                 if event2.type == pygame.KEYDOWN and pygame.key.name(event2.key).upper() \
@@ -292,7 +359,6 @@ def set_screen():
 
 
 def rule_screen():
-    screen.fill((100, 100, 100))
     rule_text = ["Правила игры",
                  "Первый танк",
                  f"Перемещается при зажатии клавиш {', '.join(first_up_down_left_right_fire_key[:-1])}.",
@@ -303,39 +369,52 @@ def rule_screen():
                  f"Стрельба производится по нажатии кнопки {second_up_down_left_right_fire_key[-1]}, после чего происходит",
                  "перезарядка длительностью в 4 секунды"]
 
-    x, y = [75, 10]
-    coord = [0, 0]
-
-    string_rendered = font.render('Назад', 1, pygame.Color('white'))
-    butt_rect = string_rendered.get_rect()
-    pygame.draw.rect(screen, (80, 80, 80), (coord[0], coord[1], 90, 50))
-    pygame.draw.rect(screen, (50, 50, 50), (coord[0], coord[1], 90, 50), 3)
-
-    butt_rect.top = 50 / 2 - font.size('Назад')[1] / 2
-    butt_rect.x = 90 / 2 - font.size('Назад')[0] / 2
-    screen.blit(string_rendered, butt_rect)
-
-    for line in rule_text:
-        string_rendered = font.render(line, 1, pygame.Color('white'))
-        rule_rect = string_rendered.get_rect()
-        if line == 'Правила игры' or line == 'Первый танк' or line == 'Второй танк':
-            rule_rect.x = WIDTH / 2 - font.size(line)[0] / 2
-        elif 'перезарядка' in line:
-            rule_rect.x = 10
-        else:
-            rule_rect.x = 25
-
-        rule_rect.top = y
-        screen.blit(string_rendered, rule_rect)
-        y += 50
-
     while True:
+        screen.fill((100, 100, 100))
+        x, y = [75, 10]
+        coord = [0, 0]
+
+        string_rendered = font.render('Назад', 1, pygame.Color('white'))
+        butt_rect = string_rendered.get_rect()
+        pygame.draw.rect(screen, (80, 80, 80), (coord[0], coord[1], 90, 50))
+        pygame.draw.rect(screen, (50, 50, 50), (coord[0], coord[1], 90, 50), 3)
+
+        butt_rect.top = 50 / 2 - font.size('Назад')[1] / 2
+        butt_rect.x = 90 / 2 - font.size('Назад')[0] / 2
+        screen.blit(string_rendered, butt_rect)
+
+        for line in rule_text:
+            string_rendered = font.render(line, 1, pygame.Color('white'))
+            rule_rect = string_rendered.get_rect()
+            if line == 'Правила игры' or line == 'Первый танк' or line == 'Второй танк':
+                rule_rect.x = WIDTH / 2 - font.size(line)[0] / 2
+            elif 'перезарядка' in line:
+                rule_rect.x = 10
+            else:
+                rule_rect.x = 25
+
+            rule_rect.top = y
+            screen.blit(string_rendered, rule_rect)
+            y += 50
+        if coord[0] <= pygame.mouse.get_pos()[0] <= 90 and coord[1] <= \
+                pygame.mouse.get_pos()[1] <= coord[1] + 50:
+            pygame.draw.rect(screen, (120, 120, 120),
+                             (coord[0], coord[1], coord[0] + 90,
+                              coord[1] + 50),
+                             5)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if coord[0] <= pygame.mouse.get_pos()[0] <= coord[0] + 90 and coord[1] <= \
                         pygame.mouse.get_pos()[1] <= coord[1] + 50:
+                    pygame.draw.rect(screen, (20, 20, 20),
+                                     (coord[0] + 3, coord[1] + 3, coord[0] + 84,
+                                      coord[1] + 44),
+                                     5)
+                    pygame.display.flip()
+                    time.sleep(0.25)
                     start_screen()
                     return
 
@@ -506,6 +585,67 @@ class Player(pygame.sprite.Sprite):
             self.mask = pygame.mask.from_surface(self.image)
 
 
+def pause_window():
+    global running
+    intro_text = ["Пауза",
+                  "Продолжить игру",
+                  "Настройки",
+                  "Выйти"]
+
+    # fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
+    # screen.blit(fon, (0, 0))
+
+    while True:
+        screen.fill((100, 100, 100))
+
+        x = (WIDTH // 2) - 150
+        y = 50
+        coords = [[x, i] for i in range(50, 450, 100)]
+        buttsize = buttwidth, buttheight = [300, 50]
+        for line in intro_text:
+            if intro_text.index(line) > 0:
+                pygame.draw.rect(screen, (80, 80, 80), (x, y, buttwidth, buttheight))
+                pygame.draw.rect(screen, (50, 50, 50), (x, y, buttwidth, buttheight), 3)
+            string_rendered = font.render(line, 1, pygame.Color('white'))
+            intro_rect = string_rendered.get_rect()
+            intro_rect.top = y + buttheight / 2 - font.size(line)[1] / 2
+            intro_rect.x = x + buttwidth / 2 - font.size(line)[0] / 2
+            screen.blit(string_rendered, intro_rect)
+            y += 100
+        for buttcoords in coords[1:]:
+
+            if buttcoords[0] <= pygame.mouse.get_pos()[0] <= buttcoords[0] + 300 and buttcoords[1] <= \
+                    pygame.mouse.get_pos()[1] <= buttcoords[1] + 50:
+                pygame.draw.rect(screen, (120, 120, 120),
+                                 (buttcoords[0], buttcoords[1], 300, 50), 3)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if coords[1][0] <= pygame.mouse.get_pos()[0] <= coords[1][0] + 300 and coords[1][1] <= \
+                        pygame.mouse.get_pos()[1] <= coords[1][1] + 50:
+                    pygame.draw.rect(screen, (20, 20, 20), (coords[1][0] + 3, coords[1][1] + 3, 294, 44), 5)
+                    pygame.display.flip()
+                    time.sleep(0.25)
+                    return
+                if coords[2][0] <= pygame.mouse.get_pos()[0] <= coords[2][0] + 300 and coords[2][1] <= \
+                        pygame.mouse.get_pos()[1] <= coords[2][1] + 50:
+                    pygame.draw.rect(screen, (20, 20, 20), (coords[2][0] + 3, coords[2][1] + 3, 294, 44), 5)
+                    pygame.display.flip()
+                    time.sleep(0.25)
+                    set_screen(pause=True)
+                    return
+                if coords[3][0] <= pygame.mouse.get_pos()[0] <= coords[3][0] + 300 and coords[3][1] <= \
+                        pygame.mouse.get_pos()[1] <= coords[3][1] + 50:
+                    pygame.draw.rect(screen, (20, 20, 20), (coords[3][0] + 3, coords[3][1] + 3, 294, 44), 5)
+                    pygame.display.flip()
+                    time.sleep(0.25)
+                    running = False
+                    return
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
 level = load_level('map2.txt')
 
 first_player, second_player, level_x, level_y = generate_level(level)
@@ -523,9 +663,11 @@ shell_flying = False
 
 clock = pygame.time.Clock()
 FPS = 300
+coordbutt = [50, 50]
 
 while running:
     delta_time = clock.tick(FPS) / 1000
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -623,5 +765,16 @@ while running:
     shells_group.draw(screen)
     player_group.draw(screen)
 
+    pygame.draw.rect(screen, (80, 80, 80), (0, 0, 50, 50))
+    pygame.draw.rect(screen, (50, 50, 50), (0, 0, 50, 50), 3)
+    string_rendered = font.render('| |', 1, pygame.Color('white'))
+    intro_rect = string_rendered.get_rect()
+    intro_rect.top = 25 - font.size('| |')[1] / 2
+    intro_rect.x = 25 - font.size('| |')[0] / 2
+    if 0 <= pygame.mouse.get_pos()[0] <= 50 and 0 <= pygame.mouse.get_pos()[1] <= 50:
+        pygame.draw.rect(screen, (120, 120, 120), (0, 0, 50, 50), 3)
+    screen.blit(string_rendered, intro_rect)
+
     pygame.display.flip()
+
     clock.tick(FPS)

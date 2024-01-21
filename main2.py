@@ -4,12 +4,11 @@ import time
 import pygame
 from math import sin, cos, pi, radians, degrees
 
-
 pygame.init()
 count = 10
 size = WIDTH, HEIGHT = 800, 800
 screen = pygame.display.set_mode(size)
-fullnameusic = os.path.join('music', 'mizuna-steps5-by-inium_effectoid.ogg.mp3')
+fullnameusic = os.path.join('music', 'mizuna-steps5-by-inium_effectoid.ogg')
 pygame.mixer.music.load(fullnameusic)
 pygame.mixer.music.play()
 pygame.display.set_caption('Танки')
@@ -18,20 +17,8 @@ font = pygame.font.Font(None, 30)
 
 # 2. Первое мое предложение - забиндить выстрел для человека на втором танке, который будет управлять стрелочками, на клави шу Ctrl
 # 1. 2. PS Ростислав
-bind_dict = {'q': 'q', 'w': 'w', 'e': 'e', 'r': 'r', 't': 't',
-             'y': 'y', 'u': 'u', 'i': 'i', 'o': 'o', 'p': 'p', 
-             'a': 'a', 's': 's', 'd': 'd', 'f': 'f', 'g': 'g', 
-             'h': 'h', 'j': 'j', 'k': 'k', 'l': 'l', 'z': 'z', 
-             'x': 'x', 'c': 'c', 'v': 'v', 'b': 'b', 'n': 'n', 
-             'm': 'm', '1': '1', '2': '2', '3': '3', '4': '4', 
-             '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', 
-             '0': '0', 'up': 'UP', 'down': 'DOWN', 'left': 'LEFT',
-             'right': 'RIGHT', 'space': 'SPACE', 'left ctrl': 'LCTRL',
-             'right ctrl': 'RCTRL', 'left alt': 'LALT', 'right alt': 'RALT',
-             'left shift': 'LSHIFT', 'right shift': 'RSHIFT', 'tab': 'TAB'}
-
-first_up_down_left_right_fire_key = ['w', 's', 'a', 'd', 'e']
-second_up_down_left_right_fire_key = ['UP', 'DOWN', 'LEFT', 'RIGHT', 'LCTRL']  # Стрелочки
+first_up_down_left_right_fire_key = ['W', 'S', 'A', 'D', 'E']
+second_up_down_left_right_fire_key = ['Up', 'Down', 'Left', 'Right', 'Ctrl']  # Стрелочки
 
 FPS = 60
 running = True
@@ -67,12 +54,12 @@ class Button:
                         for event in pygame.event.get():
                             if event.type == pygame.KEYDOWN and pygame.key.name(event.key).capitalize() \
                                     not in second_up_down_left_right_fire_key + first_up_down_left_right_fire_key:
-                                key = pygame.key.name(event.key)
+                                key = pygame.key.name(event.key).capitalize()
                                 clicked = True
                     if self.func == 'changebutt1':
-                        first_up_down_left_right_fire_key[first_up_down_left_right_fire_key.index(self.key)] = bind_dict[key]
+                        first_up_down_left_right_fire_key[first_up_down_left_right_fire_key.index(self.key)] = key
                     if self.func == 'changebutt2':
-                        second_up_down_left_right_fire_key[second_up_down_left_right_fire_key.index(self.key)] = bind_dict[key]
+                        second_up_down_left_right_fire_key[second_up_down_left_right_fire_key.index(self.key)] = key
                     self.key = key
                 if self.func in 'changeloud+' + 'changeloud-':
                     change_loud(self.func)
@@ -550,8 +537,10 @@ class Player(pygame.sprite.Sprite):
     def rotate(self, angle):
         if not self.stuck:
             self.angle += radians(angle)
-            self.image = pygame.transform.rotate(self.original_image, degrees(self.angle))  # поворачиваем исходное изображение
-            self.rect = self.image.get_rect(center=self.rect.center)  # устанавливаем центр изображения как точку поворота
+            self.image = pygame.transform.rotate(self.original_image,
+                                                 degrees(self.angle))  # поворачиваем исходное изображение
+            self.rect = self.image.get_rect(
+                center=self.rect.center)  # устанавливаем центр изображения как точку поворота
             self.mask = pygame.mask.from_surface(self.image)
 
 
@@ -560,12 +549,8 @@ def pause_window():
     intro_text = ["Пауза",
                   "Продолжить игру",
                   "Настройки",
-                  "Главное меню",
+                  'Главное меню',
                   "Выйти"]
-
-    # fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
-    # screen.blit(fon, (0, 0))
-
     x = (WIDTH // 2) - 150
     funcs = ['start', set_screen, start_screen, 'quit']
     y = 50
@@ -629,7 +614,6 @@ clock = pygame.time.Clock()
 FPS = 300
 coordbutt = [50, 50]
 pause_button = Button(screen, 0, 0, 50, 50, func=pause_window)
-
 while running:
     delta_time = clock.tick(FPS) / 1000
     pause_button.draw()
@@ -646,46 +630,46 @@ while running:
 
             # Движение и стрельба первого танка
 
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[0]):
+            if event.key == pygame.K_w:
                 if first_player.speed < 0:
                     first_player.speed *= -1
                 first_player.moving = True
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[1]):
+            if event.key == pygame.K_s:
                 first_player.moving = True
                 if first_player.speed > 0:
                     first_player.speed *= -1
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[2]):
+            if event.key == pygame.K_a:
                 if first_player.rotating_angle < 0:
                     first_player.rotating_angle *= -1
                 first_player.rotating = True
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[3]):
+            if event.key == pygame.K_d:
                 if first_player.rotating_angle > 0:
                     first_player.rotating_angle *= -1
                 first_player.rotating = True
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[4]):
+            if event.key == pygame.K_e:
                 shell = TankShell(first_player.rect.centerx, first_player.rect.centery, first_player.angle)
                 shell_flying = True
 
             # Движение и стрельба второго танка
 
             if event.type == pygame.KEYDOWN:
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[0]):
+                if event.key == pygame.K_UP:
                     if second_player.speed < 0:
                         second_player.speed *= -1
                     second_player.moving = True
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[1]):
+                if event.key == pygame.K_DOWN:
                     second_player.moving = True
                     if second_player.speed > 0:
                         second_player.speed *= -1
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[2]):
+                if event.key == pygame.K_LEFT:
                     if second_player.rotating_angle < 0:
                         second_player.rotating_angle *= -1
                     second_player.rotating = True
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[3]):
+                if event.key == pygame.K_RIGHT:
                     if second_player.rotating_angle > 0:
                         second_player.rotating_angle *= -1
                     second_player.rotating = True
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[4]):
+                if event.key == pygame.K_RCTRL:
                     shell = TankShell(second_player.rect.centerx, second_player.rect.centery, second_player.angle)
                     shell_flying = True
 
@@ -694,38 +678,38 @@ while running:
             # Остановка первого танка
 
             keys = pygame.key.get_pressed()
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[2]):
-                if not keys[getattr(pygame, 'K_' + first_up_down_left_right_fire_key[3])]:
+            if event.key == pygame.K_a:
+                if not keys[pygame.K_d]:
                     first_player.rotating = False
                 elif first_player.rotating_angle > 0:
                     first_player.rotating_angle *= -1
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[3]):
-                if not keys[getattr(pygame, 'K_' + first_up_down_left_right_fire_key[2])]:
+            if event.key == pygame.K_d:
+                if not keys[pygame.K_a]:
                     first_player.rotating = False
                 elif first_player.rotating_angle < 0:
                     first_player.rotating_angle *= -1
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[0]):
+            if event.key == pygame.K_w:
                 first_player.moving = False
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[1]):
+            if event.key == pygame.K_s:
                 first_player.moving = False
 
             # Остановка второго танка
 
             if event.type == pygame.KEYUP:
                 keys = pygame.key.get_pressed()
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[2]):
-                    if not keys[getattr(pygame, 'K_' + second_up_down_left_right_fire_key[3])]:
+                if event.key == pygame.K_LEFT:
+                    if not keys[pygame.K_RIGHT]:
                         second_player.rotating = False
                     elif second_player.rotating_angle > 0:
                         second_player.rotating_angle *= -1
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[3]):
-                    if not keys[getattr(pygame, 'K_' + second_up_down_left_right_fire_key[2])]:
+                if event.key == pygame.K_RIGHT:
+                    if not keys[pygame.K_LEFT]:
                         second_player.rotating = False
                     elif second_player.rotating_angle < 0:
                         second_player.rotating_angle *= -1
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[0]):
+                if event.key == pygame.K_UP:
                     second_player.moving = False
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[1]):
+                if event.key == pygame.K_DOWN:
                     second_player.moving = False
 
     all_sprites.update()

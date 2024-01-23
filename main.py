@@ -18,20 +18,22 @@ font = pygame.font.Font(None, 30)
 
 # 2. Первое мое предложение - забиндить выстрел для человека на втором танке, который будет управлять стрелочками, на клави шу Ctrl
 # 1. 2. PS Ростислав
-bind_dict = {'q': 'q', 'w': 'w', 'e': 'e', 'r': 'r', 't': 't',
-             'y': 'y', 'u': 'u', 'i': 'i', 'o': 'o', 'p': 'p', 
-             'a': 'a', 's': 's', 'd': 'd', 'f': 'f', 'g': 'g', 
-             'h': 'h', 'j': 'j', 'k': 'k', 'l': 'l', 'z': 'z', 
-             'x': 'x', 'c': 'c', 'v': 'v', 'b': 'b', 'n': 'n', 
-             'm': 'm', '1': '1', '2': '2', '3': '3', '4': '4', 
-             '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', 
-             '0': '0', 'up': 'UP', 'down': 'DOWN', 'left': 'LEFT',
-             'right': 'RIGHT', 'space': 'SPACE', 'left ctrl': 'LCTRL',
-             'right ctrl': 'RCTRL', 'left alt': 'LALT', 'right alt': 'RALT',
-             'left shift': 'LSHIFT', 'right shift': 'RSHIFT', 'tab': 'TAB'}
+bind_dict = {'Q': 'q', 'W': 'w', 'E': 'e', 'R': 'r', 'T': 't',
+             'Y': 'y', 'U': 'u', 'I': 'i', 'O': 'o', 'P': 'p',
+             'A': 'a', 'S': 's', 'D': 'd', 'F': 'f', 'G': 'g',
+             'H': 'h', 'J': 'j', 'K': 'k', 'L': 'l', 'Z': 'z',
+             'X': 'x', 'C': 'c', 'V': 'v', 'B': 'b', 'N': 'n',
+             'M': 'm', '1': '1', '2': '2', '3': '3', '4': '4',
+             '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
+             '0': '0', '1^': 'KP1', '2^': 'KP2', '3^': 'KP3', '4^': 'KP4',
+             '5^': 'KP5', '6^': 'KP6', '7^': 'KP7', '8^': 'KP8', '9^': 'KP9',
+             '0^': 'KP0', 'Up': 'UP', 'Down': 'DOWN', 'Left': 'LEFT',
+             'Right': 'RIGHT', 'Space': 'SPACE', 'Lctrl': 'LCTRL',
+             'Rctrl': 'RCTRL', 'Lalt': 'LALT', 'Ralt': 'RALT',
+             'Lshift': 'LSHIFT', 'Rshift': 'RSHIFT', 'Tab': 'TAB'}
 
-first_up_down_left_right_fire_key = ['w', 's', 'a', 'd', 'e']
-second_up_down_left_right_fire_key = ['UP', 'DOWN', 'LEFT', 'RIGHT', 'LCTRL']  # Стрелочки
+first_up_down_left_right_fire_key = ['W', 'S', 'A', 'D', 'E']
+second_up_down_left_right_fire_key = ['Up', 'Down', 'Left', 'Right', 'Rctrl']  # Стрелочки
 
 FPS = 60
 running = True
@@ -65,14 +67,18 @@ class Button:
                     clicked = False
                     while not clicked:
                         for event in pygame.event.get():
-                            if event.type == pygame.KEYDOWN and pygame.key.name(event.key).capitalize() \
-                                    not in second_up_down_left_right_fire_key + first_up_down_left_right_fire_key:
-                                key = pygame.key.name(event.key)
-                                clicked = True
+                            if event.type == pygame.KEYDOWN:
+                                key = pygame.key.name(event.key).capitalize()
+                                if '[' in key:
+                                    key = key[1] + '^'
+                                if key not in second_up_down_left_right_fire_key + first_up_down_left_right_fire_key:
+                                    clicked = True
                     if self.func == 'changebutt1':
-                        first_up_down_left_right_fire_key[first_up_down_left_right_fire_key.index(self.key)] = bind_dict[key]
+                        first_up_down_left_right_fire_key[
+                            first_up_down_left_right_fire_key.index(self.key)] = key.capitalize()
                     if self.func == 'changebutt2':
-                        second_up_down_left_right_fire_key[second_up_down_left_right_fire_key.index(self.key)] = bind_dict[key]
+                        second_up_down_left_right_fire_key[
+                            second_up_down_left_right_fire_key.index(self.key)] = key.capitalize()
                     self.key = key
                 if self.func in 'changeloud+' + 'changeloud-':
                     change_loud(self.func)
@@ -646,46 +652,46 @@ while running:
 
             # Движение и стрельба первого танка
 
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[0]):
+            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[0]]):
                 if first_player.speed < 0:
                     first_player.speed *= -1
                 first_player.moving = True
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[1]):
+            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[1]]):
                 first_player.moving = True
                 if first_player.speed > 0:
                     first_player.speed *= -1
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[2]):
+            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[2]]):
                 if first_player.rotating_angle < 0:
                     first_player.rotating_angle *= -1
                 first_player.rotating = True
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[3]):
+            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[3]]):
                 if first_player.rotating_angle > 0:
                     first_player.rotating_angle *= -1
                 first_player.rotating = True
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[4]):
+            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[4]]):
                 shell = TankShell(first_player.rect.centerx, first_player.rect.centery, first_player.angle)
                 shell_flying = True
 
             # Движение и стрельба второго танка
 
             if event.type == pygame.KEYDOWN:
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[0]):
+                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[0]]):
                     if second_player.speed < 0:
                         second_player.speed *= -1
                     second_player.moving = True
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[1]):
+                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[1]]):
                     second_player.moving = True
                     if second_player.speed > 0:
                         second_player.speed *= -1
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[2]):
+                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[2]]):
                     if second_player.rotating_angle < 0:
                         second_player.rotating_angle *= -1
                     second_player.rotating = True
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[3]):
+                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[3]]):
                     if second_player.rotating_angle > 0:
                         second_player.rotating_angle *= -1
                     second_player.rotating = True
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[4]):
+                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[4]]):
                     shell = TankShell(second_player.rect.centerx, second_player.rect.centery, second_player.angle)
                     shell_flying = True
 
@@ -694,38 +700,38 @@ while running:
             # Остановка первого танка
 
             keys = pygame.key.get_pressed()
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[2]):
-                if not keys[getattr(pygame, 'K_' + first_up_down_left_right_fire_key[3])]:
+            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[2]]):
+                if not keys[getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[3]])]:
                     first_player.rotating = False
                 elif first_player.rotating_angle > 0:
                     first_player.rotating_angle *= -1
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[3]):
-                if not keys[getattr(pygame, 'K_' + first_up_down_left_right_fire_key[2])]:
+            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[3]]):
+                if not keys[getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[2]])]:
                     first_player.rotating = False
                 elif first_player.rotating_angle < 0:
                     first_player.rotating_angle *= -1
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[0]):
+            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[0]]):
                 first_player.moving = False
-            if event.key == getattr(pygame, 'K_' + first_up_down_left_right_fire_key[1]):
+            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[1]]):
                 first_player.moving = False
 
             # Остановка второго танка
 
             if event.type == pygame.KEYUP:
                 keys = pygame.key.get_pressed()
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[2]):
-                    if not keys[getattr(pygame, 'K_' + second_up_down_left_right_fire_key[3])]:
+                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[2]]):
+                    if not keys[getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[3]])]:
                         second_player.rotating = False
                     elif second_player.rotating_angle > 0:
                         second_player.rotating_angle *= -1
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[3]):
-                    if not keys[getattr(pygame, 'K_' + second_up_down_left_right_fire_key[2])]:
+                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[3]]):
+                    if not keys[getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[2]])]:
                         second_player.rotating = False
                     elif second_player.rotating_angle < 0:
                         second_player.rotating_angle *= -1
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[0]):
+                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[0]]):
                     second_player.moving = False
-                if event.key == getattr(pygame, 'K_' + second_up_down_left_right_fire_key[1]):
+                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[1]]):
                     second_player.moving = False
 
     all_sprites.update()

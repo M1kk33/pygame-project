@@ -6,14 +6,16 @@ from math import sin, cos, pi, radians, degrees
 
 
 pygame.init()
-count = 10
-size = WIDTH, HEIGHT = 800, 800
+size = WIDTH, HEIGHT = 800, 450
+sound_level = 10
 screen = pygame.display.set_mode(size)
 fullnameusic = os.path.join('music', 'mizuna-steps5-by-inium_effectoid.ogg.mp3')
-pygame.mixer.music.load(fullnameusic)
+path = os.getcwd() + '\ '.strip() + fullnameusic
+pygame.mixer.music.load(path)
 pygame.mixer.music.play()
 pygame.display.set_caption('Танки')
-font = pygame.font.Font(None, 30)
+font = pygame.font.Font('data\joystix monospace.ttf', 16)
+
 # 1. для примера. Эта переменная должна будет отвечать как за действие, так и за вставленный текст в инструкции
 
 # 2. Первое мое предложение - забиндить выстрел для человека на втором танке, который будет управлять стрелочками, на клави шу Ctrl
@@ -34,11 +36,214 @@ bind_dict = {'Q': 'q', 'W': 'w', 'E': 'e', 'R': 'r', 'T': 't',
 
 first_up_down_left_right_fire_key = ['W', 'S', 'A', 'D', 'E']
 second_up_down_left_right_fire_key = ['Up', 'Down', 'Left', 'Right', 'Rctrl']  # Стрелочки
-
+maps = ['field.txt', 'map2.txt']
 FPS = 60
 running = True
-
+countmap = 0
 pause = False
+
+
+class GameSettings:
+    def __init__(self, sound_level, first_up_down_left_right_fire_key, second_up_down_left_right_fire_key):
+        self.sound_level = sound_level
+        self.first_up_down_left_right_fire_key = first_up_down_left_right_fire_key
+        self.second_up_down_left_right_fire_key = second_up_down_left_right_fire_key
+
+    def change_loud(self, func):
+        if func == 'changeloud+':
+            if self.sound_level < 10:
+                self.sound_level += 1
+        elif func == 'changeloud-':
+            if self.sound_level > 0:
+                self.sound_level -= 1
+        pygame.display.flip()
+        pygame.mixer.music.set_volume(self.sound_level / 10)
+
+
+settings = GameSettings(sound_level, first_up_down_left_right_fire_key, second_up_down_left_right_fire_key)
+
+
+def win_screen(player, countmap):
+    win_text = f"{player} выиграл!"
+    if 'Ничья' in player:
+        win_text = f"Ничья!"
+    screen.fill((100, 100, 100))
+    string_rendered = font.render(win_text, 1, pygame.Color('white'))
+    win_rect = string_rendered.get_rect()
+    win_rect.top = 225 - font.size(win_text)[1] / 2
+    win_rect.x = 400 - font.size(win_text)[0] / 2
+    screen.blit(string_rendered, win_rect)
+    pygame.display.flip()
+    time.sleep(2)
+    countmap += 1
+    start(load_level(maps[countmap]))
+    return
+
+
+def start(level):
+    first_player, second_player, level_x, level_y = generate_level(level)
+    size = WIDTH, HEIGHT = (800, 450)
+    screen = pygame.display.set_mode(size)
+
+    running = True
+    clock = pygame.time.Clock()
+    FPS = 300
+    coordbutt = [50, 50]
+    pause_button = Button(screen, 0, 0, 50, 50, func=pause_window)
+
+    while running:
+        if first_player.health <= 0 or second_player.health <= 0:
+            if first_player.health > 0:
+                win_screen('Первый игрок', countmap)
+
+            elif second_player.health > 0:
+                win_screen('Второй игрок', countmap)
+
+            else:
+                win_screen('Ничья', countmap)
+
+            running = False
+            break
+
+        # delta_time = clock.tick(FPS) / 1000
+        pause_button.draw()
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                answ = pause_button.act()
+                if answ != None:
+                    answ()
+                break
+            if event.type == pygame.QUIT:
+                running = False
+
+            if event.type == pygame.KEYDOWN:
+
+                # Движение и стрельба первого танка
+
+                if first_player.health > 0 and second_player.health > 0:
+                    if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[0]]):
+                        if first_player.speed < 0:
+                            first_player.speed *= -1
+                        first_player.moving = True
+                    if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[1]]):
+                        first_player.moving = True
+                        if first_player.speed > 0:
+                            first_player.speed *= -1
+                    if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[2]]):
+                        if first_player.rotating_angle < 0:
+                            first_player.rotating_angle *= -1
+                        first_player.rotating = True
+                    if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[3]]):
+                        if first_player.rotating_angle > 0:
+                            first_player.rotating_angle *= -1
+                        first_player.rotating = True
+                    if (event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[4]]) and
+                            first_player.health > 0):
+                        shell = TankShell(first_player.rect.centerx, first_player.rect.centery, first_player.angle,
+                                          first_player)
+                        # shell_flying = True
+
+                    # Движение и стрельба второго танка
+
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[0]]):
+                            if second_player.speed < 0:
+                                second_player.speed *= -1
+                            second_player.moving = True
+                        if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[1]]):
+                            second_player.moving = True
+                            if second_player.speed > 0:
+                                second_player.speed *= -1
+                        if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[2]]):
+                            if second_player.rotating_angle < 0:
+                                second_player.rotating_angle *= -1
+                            second_player.rotating = True
+                        if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[3]]):
+                            if second_player.rotating_angle > 0:
+                                second_player.rotating_angle *= -1
+                            second_player.rotating = True
+
+                        if event.key == getattr(pygame, 'K_' + bind_dict[
+                            second_up_down_left_right_fire_key[4]]) and second_player.health > 0:
+                            shell = TankShell(second_player.rect.centerx, second_player.rect.centery,
+                                              second_player.angle,
+                                              second_player)
+
+                            # shell_flying = True
+
+            if event.type == pygame.KEYUP:
+
+#             # Остановка первого танка
+
+                keys = pygame.key.get_pressed()
+                if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[2]]):
+                    if not keys[getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[3]])]:
+                        first_player.rotating = False
+                    elif first_player.rotating_angle > 0:
+                        first_player.rotating_angle *= -1
+                if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[3]]):
+                    if not keys[getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[2]])]:
+                        first_player.rotating = False
+                    elif first_player.rotating_angle < 0:
+                        first_player.rotating_angle *= -1
+                if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[0]]):
+                    first_player.moving = False
+                if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[1]]):
+                    first_player.moving = False
+
+                # Остановка второго танка
+
+                if event.type == pygame.KEYUP:
+                    keys = pygame.key.get_pressed()
+                    if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[2]]):
+                        if not keys[getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[3]])]:
+                            second_player.rotating = False
+                        elif second_player.rotating_angle > 0:
+                            second_player.rotating_angle *= -1
+                    if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[3]]):
+                        if not keys[getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[2]])]:
+                            second_player.rotating = False
+                        elif second_player.rotating_angle < 0:
+                            second_player.rotating_angle *= -1
+                    if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[0]]):
+                        second_player.moving = False
+                    if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[1]]):
+                        second_player.moving = False
+
+        all_sprites.update()
+
+        screen.fill(pygame.Color('black'))
+        tiles_group.draw(screen)
+        shells_group.draw(screen)
+        player_group.draw(screen)
+
+        pygame.draw.rect(screen, (80, 80, 80), (0, 0, 50, 50))
+        pygame.draw.rect(screen, (50, 50, 50), (0, 0, 50, 50), 3)
+        string_rendered = font.render('||', 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        intro_rect.top = 25 - font.size('||')[1] / 2
+        intro_rect.x = 25 - font.size('||')[0] / 2
+        if 0 <= pygame.mouse.get_pos()[0] <= 50 and 0 <= pygame.mouse.get_pos()[1] <= 50:
+            pygame.draw.rect(screen, (120, 120, 120), (0, 0, 50, 50), 3)
+        screen.blit(string_rendered, intro_rect)
+
+        pygame.display.flip()
+
+        clock.tick(FPS)
+
+    return
+
+
+class Timer:
+    import time
+    def __init__(self):
+        self.start()
+
+    def start(self):
+        self.t = Timer.time.time()
+
+    def __call__(self):
+        return Timer.time.time() - self.t
 
 
 class Button:
@@ -49,23 +254,29 @@ class Button:
         self.func = func
         self.space = space
         self.key = firstkey
-        self.count = get_count()
 
     def act(self):
         if self.coords[0] <= pygame.mouse.get_pos()[0] <= self.coords[0] + self.sizex and \
                 self.coords[1] <= \
                 pygame.mouse.get_pos()[1] <= self.coords[1] + self.sizey:
-            pygame.draw.rect(screen, (20, 20, 20),
-                             (self.coords[0] + 3, self.coords[1] + 3, self.sizex - 6, self.sizey - 6), 5)
-            pygame.display.flip()
+            if self.func != 'changeloud+' and self.func != 'changeloud-':
+                pygame.draw.rect(screen, (20, 20, 20),
+                                 (self.coords[0] + 3, self.coords[1] + 3, self.sizex - 6, self.sizey - 6), 5)
+                pygame.display.flip()
 
-            time.sleep(0.25)
+                time.sleep(0.15)
             if self.func != None and type(self.func) != str:
                 return self.func
             elif type(self.func) == str:
                 if self.func in 'changebutt1' + 'changebutt2':
+
                     clicked = False
-                    while not clicked:
+                    t = Timer()
+                    t.start()
+                    while not clicked or int(t.__call__()) < 5:
+
+                        if int(t.__call__()) == 3 or clicked:
+                            break
                         for event in pygame.event.get():
                             if event.type == pygame.KEYDOWN:
                                 key = pygame.key.name(event.key).capitalize()
@@ -73,15 +284,19 @@ class Button:
                                     key = key[1] + '^'
                                 if key not in second_up_down_left_right_fire_key + first_up_down_left_right_fire_key:
                                     clicked = True
-                    if self.func == 'changebutt1':
-                        first_up_down_left_right_fire_key[
-                            first_up_down_left_right_fire_key.index(self.key)] = key.capitalize()
-                    if self.func == 'changebutt2':
-                        second_up_down_left_right_fire_key[
-                            second_up_down_left_right_fire_key.index(self.key)] = key.capitalize()
-                    self.key = key
+
+                    if clicked:
+                        if self.func == 'changebutt1':
+                            first_up_down_left_right_fire_key[
+                                first_up_down_left_right_fire_key.index(self.key)] = key.capitalize()
+                        if self.func == 'changebutt2':
+                            second_up_down_left_right_fire_key[
+                                second_up_down_left_right_fire_key.index(self.key)] = key.capitalize()
+                        self.key = key
+                        pygame.event.set_allowed(pygame.MOUSEBUTTONDOWN)
+                        pygame.event.set_allowed(pygame.MOUSEBUTTONUP)
                 if self.func in 'changeloud+' + 'changeloud-':
-                    change_loud(self.func)
+                    settings.change_loud(self.func)
                 if self.func == 'quit':
                     return self.func
                 if self.func == 'start':
@@ -89,30 +304,15 @@ class Button:
         else:
             return None
 
+    def retfunc(self):
+        return self.func
+
     def draw(self):
         pygame.draw.rect(self.space, (80, 80, 80), (self.coords[0], self.coords[1], self.sizex, self.sizey))
         pygame.draw.rect(self.space, (50, 50, 50), (self.coords[0], self.coords[1], self.sizex, self.sizey), 3)
         if self.coords[0] <= pygame.mouse.get_pos()[0] <= self.coords[0] + self.sizex and self.coords[1] <= \
                 pygame.mouse.get_pos()[1] <= self.coords[1] + self.sizey:
             pygame.draw.rect(screen, (120, 120, 120), (self.coords[0], self.coords[1], self.sizex, self.sizey), 3)
-
-
-def get_count():
-    global count
-    return count
-
-
-def change_loud(func):
-    global count
-    if func == 'changeloud+':
-        if count < 10:
-            count += 1
-            pygame.display.flip()
-    elif func == 'changeloud-':
-        if count > 0:
-            count -= 1
-            pygame.display.flip()
-    pygame.mixer.music.set_volume(count / 10)
 
 
 def load_image(name, colorkey=None):
@@ -141,8 +341,10 @@ clock = pygame.time.Clock()
 
 
 def start_screen():
-    global pause
+    global level, first_player, second_player, level_x, level_, countmap
+
     pause = False
+    first_player, second_player, level_x, level_y = None, None, None, None
     intro_text = ["Начать игру",
                   "Правила игры",
                   "Настройки",
@@ -180,6 +382,7 @@ def start_screen():
                             answ()
                             return
                         else:
+                            start(load_level(maps[countmap]))
                             return
 
         pygame.display.flip()
@@ -226,7 +429,7 @@ def info_screen():
 
 
 def set_screen():
-    global count, pause
+    global sound_level, pause
     set_text = ["Настройки",
                 "Громкость",
                 "<", ">",
@@ -325,11 +528,15 @@ def set_screen():
 
                             return
                         else:
+                            if 'changebutt' in bt.retfunc():
+                                pygame.event.set_blocked(pygame.MOUSEBUTTONDOWN)
+                                pygame.event.set_blocked(pygame.MOUSEBUTTONUP)
                             bt.act()
+                            b = bt.retfunc()
 
-        string_rendered = font.render(str(count), 1, pygame.Color('white'))
+        string_rendered = font.render(str(settings.sound_level), 1, pygame.Color('white'))
         butt_rect = string_rendered.get_rect()
-        butt_rect.x = 400 - font.size(str(count))[0] / 2
+        butt_rect.x = 400 - font.size(str(settings.sound_level))[0] / 2
         butt_rect.top = butty2
         screen.blit(string_rendered, butt_rect)
         pygame.display.flip()
@@ -341,12 +548,12 @@ def rule_screen():
     rule_text = ["Правила игры",
                  "Первый танк",
                  f"Перемещается при зажатии клавиш {', '.join(first_up_down_left_right_fire_key[:-1])}.",
-                 f"Стрельба производится по нажатии кнопки {first_up_down_left_right_fire_key[-1]}, после чего происходит",
-                 "перезарядка длительностью в 4 секунды",
+                 f"Стрельба производится по нажатии кнопки {first_up_down_left_right_fire_key[-1]}, после",
+                 "чего происходит перезарядка длительностью в 4 секунды",
                  "Второй танк",
                  f"Перемещается при зажатии клавиш {', '.join(second_up_down_left_right_fire_key[:-1])}.",
-                 f"Стрельба производится по нажатии кнопки {second_up_down_left_right_fire_key[-1]}, после чего происходит",
-                 "перезарядка длительностью в 4 секунды"]
+                 f"Стрельба производится по нажатии кнопки {second_up_down_left_right_fire_key[-1]}, после",
+                 "чего происходит перезарядка длительностью в 4 секунды"]
     x, y = [75, 10]
     Buttons = []
     Texts = []
@@ -441,16 +648,15 @@ class Tile(pygame.sprite.Sprite):
 
 player = None
 
-# группы спрайтов
-all_sprites = pygame.sprite.Group()
-box_group = pygame.sprite.Group()
-wall_group = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
-shells_group = pygame.sprite.Group()
-
 
 def generate_level(level):
+    global all_sprites, box_group, wall_group, tiles_group, player_group, shells_group
+    all_sprites = pygame.sprite.Group()
+    box_group = pygame.sprite.Group()
+    wall_group = pygame.sprite.Group()
+    tiles_group = pygame.sprite.Group()
+    player_group = pygame.sprite.Group()
+    shells_group = pygame.sprite.Group()
     first_player, second_player, x, y = None, None, None, None
     for y in range(len(level)):
         for x in range(len(level[y])):
@@ -480,14 +686,14 @@ def check_tile(player):
 
 
 class TankShell(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, angle):
+    def __init__(self, pos_x, pos_y, angle, tank):
         super().__init__(shells_group, all_sprites)
         self.original_image = shell_image
         self.image = shell_image.copy()
         self.rect = self.image.get_rect().move(pos_x, pos_y)
         self.angle = angle
         self.speed = 4.6
-
+        self.tank = tank  # сохраняем ссылку на танк, который выпустил снаряд
         self.image = pygame.transform.rotate(self.original_image, degrees(self.angle - pi / 2))
         self.rect = self.image.get_rect(center=self.rect.center)  # устанавливаем центр изображения как точку поворота
         self.mask = pygame.mask.from_surface(self.image)
@@ -498,13 +704,25 @@ class TankShell(pygame.sprite.Sprite):
             self.kill()
         for tile in pygame.sprite.spritecollide(self, wall_group, False, pygame.sprite.collide_mask):
             self.kill()
+        for player in pygame.sprite.spritecollide(self, player_group, False):
+            if player != self.tank:  # проверяем, что снаряд не столкнулся с танком, который его выпустил
+                # наносим урон танку
+                player.health -= 40
+                if player.health <= 0:
+                    # если здоровье танка стало меньше или равно 0, то танк уничтожается
+                    player.kill()
+
+                self.kill()  # убиваем снаряд
         self.rect.centerx += round(self.speed * cos(self.angle))
         self.rect.centery -= round(self.speed * sin(self.angle))
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, player):
+    def __init__(self, pos_x, pos_y, player, health=100):
         super().__init__(player_group, all_sprites)
+
+        self.player = player
+        self.health = health
 
         self.stuck = False
         self.rotating = False
@@ -608,6 +826,10 @@ def pause_window():
                             running = False
                             return
                         else:
+                            if funcs.index(bn.retfunc()) == 2:
+                                first_player.kill()
+                                second_player.kill()
+
                             pause = True
                             answ()
                             return
@@ -616,141 +838,4 @@ def pause_window():
         clock.tick(FPS)
 
 
-level = load_level('map2.txt')
-
-first_player, second_player, level_x, level_y = generate_level(level)
-
-size = WIDTH, HEIGHT = len(level[0]) * tile_width, len(level) * tile_height
-screen = pygame.display.set_mode(size)
-
-running = True
-
 start_screen()
-
-rotating = False
-moving = False
-shell_flying = False
-
-clock = pygame.time.Clock()
-FPS = 300
-coordbutt = [50, 50]
-pause_button = Button(screen, 0, 0, 50, 50, func=pause_window)
-
-while running:
-    delta_time = clock.tick(FPS) / 1000
-    pause_button.draw()
-    for event in pygame.event.get():
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            answ = pause_button.act()
-            if answ != None:
-                answ()
-            break
-        if event.type == pygame.QUIT:
-            running = False
-
-        if event.type == pygame.KEYDOWN:
-
-            # Движение и стрельба первого танка
-
-            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[0]]):
-                if first_player.speed < 0:
-                    first_player.speed *= -1
-                first_player.moving = True
-            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[1]]):
-                first_player.moving = True
-                if first_player.speed > 0:
-                    first_player.speed *= -1
-            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[2]]):
-                if first_player.rotating_angle < 0:
-                    first_player.rotating_angle *= -1
-                first_player.rotating = True
-            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[3]]):
-                if first_player.rotating_angle > 0:
-                    first_player.rotating_angle *= -1
-                first_player.rotating = True
-            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[4]]):
-                shell = TankShell(first_player.rect.centerx, first_player.rect.centery, first_player.angle)
-                shell_flying = True
-
-            # Движение и стрельба второго танка
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[0]]):
-                    if second_player.speed < 0:
-                        second_player.speed *= -1
-                    second_player.moving = True
-                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[1]]):
-                    second_player.moving = True
-                    if second_player.speed > 0:
-                        second_player.speed *= -1
-                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[2]]):
-                    if second_player.rotating_angle < 0:
-                        second_player.rotating_angle *= -1
-                    second_player.rotating = True
-                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[3]]):
-                    if second_player.rotating_angle > 0:
-                        second_player.rotating_angle *= -1
-                    second_player.rotating = True
-                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[4]]):
-                    shell = TankShell(second_player.rect.centerx, second_player.rect.centery, second_player.angle)
-                    shell_flying = True
-
-        if event.type == pygame.KEYUP:
-
-            # Остановка первого танка
-
-            keys = pygame.key.get_pressed()
-            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[2]]):
-                if not keys[getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[3]])]:
-                    first_player.rotating = False
-                elif first_player.rotating_angle > 0:
-                    first_player.rotating_angle *= -1
-            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[3]]):
-                if not keys[getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[2]])]:
-                    first_player.rotating = False
-                elif first_player.rotating_angle < 0:
-                    first_player.rotating_angle *= -1
-            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[0]]):
-                first_player.moving = False
-            if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[1]]):
-                first_player.moving = False
-
-            # Остановка второго танка
-
-            if event.type == pygame.KEYUP:
-                keys = pygame.key.get_pressed()
-                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[2]]):
-                    if not keys[getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[3]])]:
-                        second_player.rotating = False
-                    elif second_player.rotating_angle > 0:
-                        second_player.rotating_angle *= -1
-                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[3]]):
-                    if not keys[getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[2]])]:
-                        second_player.rotating = False
-                    elif second_player.rotating_angle < 0:
-                        second_player.rotating_angle *= -1
-                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[0]]):
-                    second_player.moving = False
-                if event.key == getattr(pygame, 'K_' + bind_dict[second_up_down_left_right_fire_key[1]]):
-                    second_player.moving = False
-
-    all_sprites.update()
-
-    screen.fill(pygame.Color('black'))
-    tiles_group.draw(screen)
-    shells_group.draw(screen)
-    player_group.draw(screen)
-
-    pygame.draw.rect(screen, (80, 80, 80), (0, 0, 50, 50))
-    pygame.draw.rect(screen, (50, 50, 50), (0, 0, 50, 50), 3)
-    string_rendered = font.render('| |', 1, pygame.Color('white'))
-    intro_rect = string_rendered.get_rect()
-    intro_rect.top = 25 - font.size('| |')[1] / 2
-    intro_rect.x = 25 - font.size('| |')[0] / 2
-    if 0 <= pygame.mouse.get_pos()[0] <= 50 and 0 <= pygame.mouse.get_pos()[1] <= 50:
-        pygame.draw.rect(screen, (120, 120, 120), (0, 0, 50, 50), 3)
-    screen.blit(string_rendered, intro_rect)
-
-    pygame.display.flip()
-
-    clock.tick(FPS)

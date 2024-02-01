@@ -829,8 +829,8 @@ class Player(pygame.sprite.Sprite):
         self.player = player
         self.health = health
 
-        self.reload_time = 1000
-        self.last_shot_time = pygame.time.get_ticks()
+        self.reload_time = 500
+        self.last_shot_time = pygame.time.get_ticks() - self.reload_time
 
         self.stuck = False
         self.rotating = False
@@ -891,6 +891,7 @@ class Player(pygame.sprite.Sprite):
         if current_time - self.last_shot_time > self.reload_time:
             # создание и запуск пули
             shell = TankShell(self.rect.centerx, self.rect.centery, self.angle, self)
+            self.last_shot_time = current_time
 
 
 def pause_window():

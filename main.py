@@ -80,8 +80,8 @@ class GameSettings:
 settings = GameSettings(sound_level, first_up_down_left_right_fire_key, second_up_down_left_right_fire_key)
 
 
-def win_screen(player, countmap):
-    global running, finish_time, start_time
+def win_screen(player):
+    global running, finish_time, start_time, countmap
     pygame.event.set_blocked(pygame.KEYDOWN)
     pygame.event.set_blocked(pygame.KEYUP)
     if player == "Первый игрок":
@@ -195,7 +195,7 @@ def start(level):
                     time.sleep(0.05)
                     screen.blit(image, (second_player.rect.x, second_player.rect.y))
                     pygame.display.flip()
-                win_screen('Первый игрок', countmap)
+                win_screen('Первый игрок')
                 return
             elif second_player.health > 0:
                 running = False
@@ -204,10 +204,10 @@ def start(level):
                     time.sleep(0.05)
                     screen.blit(image, (first_player.rect.x, first_player.rect.y))
                     pygame.display.flip()
-                win_screen('Второй игрок', countmap)
+                win_screen('Второй игрок')
                 return
             else:
-                win_screen('Ничья', countmap)
+                win_screen('Ничья')
                 return
 
         # delta_time = clock.tick(FPS) / 1000

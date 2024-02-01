@@ -3,8 +3,24 @@ import sys
 import time
 import pygame
 from math import sin, cos, pi, radians, degrees
+import sqlite3
 
-
+start_folder = os.getcwd()
+if not (os.path.exists(os.getcwd() + '\ '.strip() + os.path.join('database', 'games.db'))):
+    if not (os.path.exists(os.getcwd() + '\ '.strip() + 'database')):
+        os.mkdir("database")
+    os.chdir('database')
+    conn = sqlite3.connect('games.db')
+    cur = conn.cursor()
+    cur.execute('''CREATE TABLE IF NOT EXISTS Games(
+    id INTEGER,
+    wins_first_player INTEGER,
+    wins_second_player INTEGER,
+    game_time TEXT)''')
+    conn.commit()
+    conn.close()
+    os.chdir(start_folder)
+start_time, finish_time = time.gmtime(), time.gmtime()
 pygame.init()
 size = WIDTH, HEIGHT = 800, 450
 sound_level = 10
@@ -15,6 +31,7 @@ pygame.mixer.music.load(path)
 pygame.mixer.music.play()
 pygame.display.set_caption('Танки')
 font = pygame.font.Font('data\joystix monospace.ttf', 16)
+wins = {'first': 0, 'second': 0}
 
 # 1. для примера. Эта переменная должна будет отвечать как за действие, так и за вставленный текст в инструкции
 
@@ -64,20 +81,95 @@ settings = GameSettings(sound_level, first_up_down_left_right_fire_key, second_u
 
 
 def win_screen(player, countmap):
-    win_text = f"{player} выиграл!"
-    if 'Ничья' in player:
-        win_text = f"Ничья!"
-    screen.fill((100, 100, 100))
-    string_rendered = font.render(win_text, 1, pygame.Color('white'))
-    win_rect = string_rendered.get_rect()
-    win_rect.top = 225 - font.size(win_text)[1] / 2
-    win_rect.x = 400 - font.size(win_text)[0] / 2
-    screen.blit(string_rendered, win_rect)
-    pygame.display.flip()
-    time.sleep(2)
-    countmap += 1
-    start(load_level(maps[countmap]))
-    return
+    global running, finish_time, start_time
+    pygame.event.set_blocked(pygame.KEYDOWN)
+    pygame.event.set_blocked(pygame.KEYUP)
+    if player == "Первый игрок":
+        wins['first'] += 1
+    if player == "Второй игрок":
+        wins['second'] += 1
+    if countmap + 1 < len(maps):
+        win_text = f"{player} выиграл!"
+
+        if 'Ничья' in player:
+            win_text = f"Ничья!"
+        screen.fill((100, 100, 100))
+        string_rendered = font.render(win_text, 1, pygame.Color('white'))
+        win_rect = string_rendered.get_rect()
+        win_rect.top = 225 - font.size(win_text)[1] / 2
+        win_rect.x = 400 - font.size(win_text)[0] / 2
+        screen.blit(string_rendered, win_rect)
+        pygame.display.flip()
+        time.sleep(0.8)
+        countmap += 1
+        pygame.event.set_allowed(pygame.KEYDOWN)
+        pygame.event.set_allowed(pygame.KEYUP)
+        running = True
+        start(load_level(maps[countmap]))
+        return
+    else:
+        finish_time = time.gmtime()
+        dbtime = f"{str(finish_time.tm_hour - start_time.tm_hour).rjust(2, '0')}:{str(finish_time.tm_min - start_time.tm_min).rjust(2, '0')}:{str(finish_time.tm_sec - start_time.tm_sec).rjust(2, '0')}"
+        if wins['first'] > wins['second']:
+            win_text = ['Первый игрок выиграл', "Счёт", f"Первый игрок: {wins['first']}",
+                        f"Второй игрок: {wins['second']}", 'Главное меню', 'Выйти']
+        elif wins['first'] < wins['second']:
+            win_text = ['Второй игрок выиграл', "Счёт", f"Первый игрок: {wins['first']}",
+                        f"Второй игрок: {wins['second']}", 'Главное меню', 'Выйти']
+        else:
+            win_text = ['Ничья', "Счёт", f"Первый игрок: {wins['first']}",
+                        f"Второй игрок: {wins['second']}", 'Главное меню', 'Выйти']
+        os.chdir('database')
+        conn = sqlite3.connect('games.db')
+        cur = conn.cursor()
+        count = cur.execute('''SELECT COUNT(id) FROM Games''').fetchone()
+        cur.execute('''INSERT INTO Games (id, wins_first_player, wins_second_player, game_time) VALUES (?, ?, ?, ?)''',
+                    (count[0] + 1, wins['first'], wins['second'], dbtime))
+        conn.commit()
+        conn.close()
+        os.chdir(start_folder)
+        while True:
+            pygame.event.set_allowed(pygame.KEYDOWN)
+            pygame.event.set_allowed(pygame.KEYUP)
+            screen.fill((100, 100, 100))
+            funcs = [start_screen, 'quit']
+            Text = []
+            Buttons = []
+            buttsizex = 180
+            buttsizey = 30
+            first_coords = (400 - buttsizex / 2, 10)
+            coords = [first_coords[0], first_coords[1]]
+            for i in win_text:
+                if i == 'Главное меню' or i == 'Выйти':
+                    Buttons.append(Button(screen, coords[0], coords[1], buttsizex, buttsizey,
+                                          func=funcs[-(len(win_text) - win_text.index(i))]))
+                string_rendered = font.render(i, 1, pygame.Color('white'))
+                intro_rect = string_rendered.get_rect()
+                intro_rect.top = coords[1] + buttsizey / 2 - font.size(i)[1] / 2
+                intro_rect.x = coords[0] + buttsizex / 2 - font.size(i)[0] / 2
+                Text.append([string_rendered, intro_rect])
+                coords[1] += 80
+            for bn in Buttons:
+                bn.draw()
+            for tt in Text:
+                screen.blit(tt[0], tt[1])
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    terminate()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+
+                    for bn in Buttons:
+                        answ = bn.act()
+                        if answ != None:
+                            if type(answ) != str:
+
+                                answ()
+                                return
+                            else:
+                                return
+
+            pygame.display.flip()
+            clock.tick(FPS)
 
 
 def start(level):
@@ -92,18 +184,31 @@ def start(level):
     pause_button = Button(screen, 0, 0, 50, 50, func=pause_window)
 
     while running:
+        for shell in shells_group:
+            if shell.rect.right < 0 or shell.rect.left > WIDTH or shell.rect.top > HEIGHT or shell.rect.bottom < 0:
+                shell.kill()
         if first_player.health <= 0 or second_player.health <= 0:
             if first_player.health > 0:
+                running = False
+                for i in range(1, 26):
+                    image = pygame.image.load(rf'.\data\boom{i}.png')
+                    time.sleep(0.05)
+                    screen.blit(image, (second_player.rect.x, second_player.rect.y))
+                    pygame.display.flip()
                 win_screen('Первый игрок', countmap)
-
+                return
             elif second_player.health > 0:
+                running = False
+                for i in range(1, 26):
+                    image = pygame.image.load(rf'.\data\boom{i}.png')
+                    time.sleep(0.05)
+                    screen.blit(image, (first_player.rect.x, first_player.rect.y))
+                    pygame.display.flip()
                 win_screen('Второй игрок', countmap)
-
+                return
             else:
                 win_screen('Ничья', countmap)
-
-            running = False
-            break
+                return
 
         # delta_time = clock.tick(FPS) / 1000
         pause_button.draw()
@@ -115,11 +220,10 @@ def start(level):
                 break
             if event.type == pygame.QUIT:
                 running = False
-
+                return
             if event.type == pygame.KEYDOWN:
 
                 # Движение и стрельба первого танка
-
                 if first_player.health > 0 and second_player.health > 0:
                     if event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[0]]):
                         if first_player.speed < 0:
@@ -139,8 +243,7 @@ def start(level):
                         first_player.rotating = True
                     if (event.key == getattr(pygame, 'K_' + bind_dict[first_up_down_left_right_fire_key[4]]) and
                             first_player.health > 0):
-                        shell = TankShell(first_player.rect.centerx, first_player.rect.centery, first_player.angle,
-                                          first_player)
+                        first_player.shoot()
                         # shell_flying = True
 
                     # Движение и стрельба второго танка
@@ -165,9 +268,7 @@ def start(level):
 
                         if event.key == getattr(pygame, 'K_' + bind_dict[
                             second_up_down_left_right_fire_key[4]]) and second_player.health > 0:
-                            shell = TankShell(second_player.rect.centerx, second_player.rect.centery,
-                                              second_player.angle,
-                                              second_player)
+                            second_player.shoot()
 
                             # shell_flying = True
 
@@ -341,20 +442,21 @@ clock = pygame.time.Clock()
 
 
 def start_screen():
-    global level, first_player, second_player, level_x, level_, countmap
-
-    pause = False
-    first_player, second_player, level_x, level_y = None, None, None, None
+    global countmap, wins, running, start_time
+    wins['first'] = 0
+    wins['second'] = 0
+    countmap = 0
     intro_text = ["Начать игру",
                   "Правила игры",
                   "Настройки",
-                  "Информация"]
-    funcs = ['start', rule_screen, set_screen, info_screen]
+                  "Информация",
+                  "Выйти"]
+    funcs = ['start', rule_screen, set_screen, info_screen, 'quit']
     Buttons = []
     text = []
     x = (WIDTH // 2) - 150
     y = 50
-    buttwidth, buttheight = [300, 50]
+    buttwidth, buttheight = [270, 50]
     for line in intro_text:
         Buttons.append(Button(screen, x, y, buttwidth, buttheight, func=funcs[intro_text.index(line)]))
         string_rendered = font.render(line, 1, pygame.Color('white'))
@@ -382,6 +484,8 @@ def start_screen():
                             answ()
                             return
                         else:
+                            running = True
+                            start_time = time.gmtime()
                             start(load_level(maps[countmap]))
                             return
 
@@ -614,7 +718,7 @@ def load_level(filename):
     # и подсчитываем максимальную длину
     max_width = max(map(len, level_map))
 
-    # дополняем каждую строку пустыми клетками ('.')    
+    # дополняем каждую строку пустыми клетками ('.')
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
@@ -650,7 +754,7 @@ player = None
 
 
 def generate_level(level):
-    global all_sprites, box_group, wall_group, tiles_group, player_group, shells_group
+    global all_sprites, box_group, wall_group, tiles_group, player_group, shells_group, first_player, second_player
     all_sprites = pygame.sprite.Group()
     box_group = pygame.sprite.Group()
     wall_group = pygame.sprite.Group()
@@ -674,7 +778,8 @@ def generate_level(level):
             elif level[y][x] == '&':
                 Tile('empty', x, y)
                 second_player = Player(x, y, 2)
-    # вернем игрока, а также размер поля в клетках            
+    # вернем игрока, а также размер поля в клетках
+
     return first_player, second_player, x, y
 
 
@@ -723,6 +828,9 @@ class Player(pygame.sprite.Sprite):
 
         self.player = player
         self.health = health
+
+        self.reload_time = 1000
+        self.last_shot_time = pygame.time.get_ticks()
 
         self.stuck = False
         self.rotating = False
@@ -778,6 +886,12 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.image.get_rect(center=self.rect.center)  # устанавливаем центр изображения как точку поворота
             self.mask = pygame.mask.from_surface(self.image)
 
+    def shoot(self):
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_shot_time > self.reload_time:
+            # создание и запуск пули
+            shell = TankShell(self.rect.centerx, self.rect.centery, self.angle, self)
+
 
 def pause_window():
     global running, pause
@@ -829,7 +943,7 @@ def pause_window():
                             if funcs.index(bn.retfunc()) == 2:
                                 first_player.kill()
                                 second_player.kill()
-
+                                running = False
                             pause = True
                             answ()
                             return
